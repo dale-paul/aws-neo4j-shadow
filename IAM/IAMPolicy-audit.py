@@ -2,6 +2,9 @@
 # QPP Account object module
 # Author: D Paul - Flexion
 
+import sys,os
+sys.path.append(os.path.join(os.getcwd(),'lib'))
+
 import boto3
 import argparse
 import json
