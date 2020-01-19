@@ -71,6 +71,17 @@ def dump_users(neo4j, acct):
     ]
     neo4j.write_nodes(nodes)
 
+def dump_role_policies(neo4j,acct):
+    tuples = [ 
+        (
+            { 'label': ROLELABEL, 'properties': {'name':r['Name']} },
+            { 'label': 'HAS_POLICY', 'properties': {} }, 
+            { 'label': POLICYLABEL, 'properties': {'name': p} } 
+        ) 
+        for r in acct['Roles'] for p in r['Policies'] 
+    ]
+    neo4j.write_relations(tuples)
+
 def dump_user_policies(neo4j,acct):
     tuples = [ 
         (
@@ -82,7 +93,17 @@ def dump_user_policies(neo4j,acct):
     ]
     neo4j.write_relations(tuples)
 
-
+def dump_group_policies(neo4j,acct):
+    tuples = [ 
+        (
+            { 'label': GROUPLABEL, 'properties': {'name':g['Name']} },
+            { 'label': 'HAS_POLICY', 'properties': {} }, 
+            { 'label': POLICYLABEL, 'properties': {'name': p} } 
+        ) 
+        for g in acct['Groups'] for p in g['Policies'] 
+    ]
+    neo4j.write_relations(tuples)
+    
 def dump_group_users(neo4j,acct):
     tuples = [ 
         (
@@ -91,6 +112,39 @@ def dump_group_users(neo4j,acct):
             { 'label': USERLABEL, 'properties': {'name':u} } 
         ) 
         for g in acct['Groups'] for u in g['Users'] 
+    ]
+    neo4j.write_relations(tuples)
+
+def dump_group_inline_policies(neo4j,acct):
+    tuples = [ 
+        (
+            { 'label': GROUPLABEL, 'properties': {'name':g['Group']} },
+            { 'label': 'HAS_INLINE_POLICY', 'properties': {} }, 
+            { 'label': POLICYLABEL, 'properties': {'name': p} } 
+        ) 
+        for g in acct['InlinePolicies']['Groups'] for p in g['Policies'] 
+    ]
+    neo4j.write_relations(tuples)
+
+def dump_role_inline_policies(neo4j,acct):
+    tuples = [ 
+        (
+            { 'label': ROLELABEL, 'properties': {'name':r['Role']} },
+            { 'label': 'HAS_INLINE_POLICY', 'properties': {} }, 
+            { 'label': POLICYLABEL, 'properties': {'name': p} } 
+        ) 
+        for r in acct['InlinePolicies']['Roles'] for p in r['Policies'] 
+    ]
+    neo4j.write_relations(tuples)
+
+def dump_user_inline_policies(neo4j,acct):
+    tuples = [ 
+        (
+            { 'label': USERLABEL, 'properties': {'name':u['User']} },
+            { 'label': 'HAS_INLINE_POLICY', 'properties': {} }, 
+            { 'label': POLICYLABEL, 'properties': {'name': p} } 
+        ) 
+        for u in acct['InlinePolicies']['Users'] for p in u['Policies'] 
     ]
     neo4j.write_relations(tuples)
 
@@ -104,8 +158,13 @@ with Neo4jHelper() as neo4j:
         dump_roles(neo4j,acct)
         dump_groups(neo4j,acct)
         dump_users(neo4j,acct)
-        dump_group_users(neo4j,acct)
         dump_user_policies(neo4j,acct)
+        dump_role_policies(neo4j,acct)
+        dump_group_policies(neo4j,acct)
+        dump_group_users(neo4j,acct)
+        dump_group_inline_policies(neo4j,acct)
+        dump_role_inline_policies(neo4j,acct)
+        dump_user_inline_policies(neo4j,acct)
 
 
 
