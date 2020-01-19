@@ -13,12 +13,12 @@
             "console": "integratedTerminal",
             "args": [
                 "--role-name","QPPMGMTRole",
-                "--account-number","863249929524",//"941681414890","968524040713",
+                //"--account-number","863249929524",//"941681414890","968524040713",
                 //"--account-alias","aws-hhs-cms-amg-qpp-secops", //"aws-hhs-cms-ccsq-qpp-qppg","aws-hhs-cms-mip",
                 //"--aws-profile","fc-long-term",
                 "--log-level","INFO",
                 "--max-threads", "8",
-                "--neo4j","bolt://localhost:7687"
+                "--neo4j"
                 // "-o","test-scripts/QPPFC-1685.json"
            ]
         }

@@ -28,7 +28,7 @@ parser.add_argument("--account-number", nargs='*',help="Restrict output to this 
 parser.add_argument("--aws-profile", help="AWS Profile to use for credentials")
 parser.add_argument("--log-level", choices=['CRITICAL','ERROR','WARNING','INFO','DEBUG'],default='WARNING',help="Set the logging level")
 parser.add_argument("--max-threads", default="3", type=int, help="Maximum threads for account execution. Default = 3. More can cause throttling errors")
-parser.add_argument("--neo4j", help="URI of neo4j graph database to write output")
+parser.add_argument("--neo4j", action='store_true', help="put output to neo4j server")
 args = parser.parse_args()
 
 def epoch_str(d1):
@@ -36,11 +36,13 @@ def epoch_str(d1):
     diff = (datetime.datetime.now(pytz.timezone('GMT'))-d1).days
     return "today" if diff == 0 else (f"{diff} days ago" if diff > 0 else f"in {-diff} days")
 
+
 def try_parse_datestr(datestr):
     try:
         return _parser.parse(datestr)
     except ValueError:
         return datestr
+
 
 def get_user_credentials_report(acctObj:QPPAccount):
     """ generate and retreive the AWS Credentials Report """
