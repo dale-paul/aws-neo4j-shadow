@@ -74,9 +74,9 @@ def dump_users(neo4j, acct):
 def dump_role_policies(neo4j,acct):
     tuples = [ 
         (
-            { 'label': ROLELABEL, 'properties': {'name':r['Name']} },
+            { 'label': ROLELABEL, 'properties': {'name':r['Name'],'account':acct['Account']} },
             { 'label': 'HAS_POLICY', 'properties': {} }, 
-            { 'label': POLICYLABEL, 'properties': {'name': p} } 
+            { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for r in acct['Roles'] for p in r['Policies'] 
     ]
@@ -85,9 +85,9 @@ def dump_role_policies(neo4j,acct):
 def dump_user_policies(neo4j,acct):
     tuples = [ 
         (
-            { 'label': USERLABEL, 'properties': {'name':u['Name']} },
+            { 'label': USERLABEL, 'properties': {'name':u['Name'],'account':acct['Account']} },
             { 'label': 'HAS_POLICY', 'properties': {} }, 
-            { 'label': POLICYLABEL, 'properties': {'name': p} } 
+            { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for u in acct['Users'] for p in u['Policies'] 
     ]
@@ -96,9 +96,9 @@ def dump_user_policies(neo4j,acct):
 def dump_group_policies(neo4j,acct):
     tuples = [ 
         (
-            { 'label': GROUPLABEL, 'properties': {'name':g['Name']} },
+            { 'label': GROUPLABEL, 'properties': {'name':g['Name'],'account':acct['Account']} },
             { 'label': 'HAS_POLICY', 'properties': {} }, 
-            { 'label': POLICYLABEL, 'properties': {'name': p} } 
+            { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for g in acct['Groups'] for p in g['Policies'] 
     ]
@@ -107,9 +107,9 @@ def dump_group_policies(neo4j,acct):
 def dump_group_users(neo4j,acct):
     tuples = [ 
         (
-            { 'label': GROUPLABEL, 'properties': {'name': g['Name']} },
+            { 'label': GROUPLABEL, 'properties': {'name': g['Name'],'account':acct['Account']} },
             { 'label': 'HAS_MEMBER', 'properties': {} }, 
-            { 'label': USERLABEL, 'properties': {'name':u} } 
+            { 'label': USERLABEL, 'properties': {'name':u,'account':acct['Account']} } 
         ) 
         for g in acct['Groups'] for u in g['Users'] 
     ]
@@ -118,9 +118,9 @@ def dump_group_users(neo4j,acct):
 def dump_group_inline_policies(neo4j,acct):
     tuples = [ 
         (
-            { 'label': GROUPLABEL, 'properties': {'name':g['Group']} },
+            { 'label': GROUPLABEL, 'properties': {'name':g['Group'],'account':acct['Account']} },
             { 'label': 'HAS_INLINE_POLICY', 'properties': {} }, 
-            { 'label': POLICYLABEL, 'properties': {'name': p} } 
+            { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for g in acct['InlinePolicies']['Groups'] for p in g['Policies'] 
     ]
@@ -129,9 +129,9 @@ def dump_group_inline_policies(neo4j,acct):
 def dump_role_inline_policies(neo4j,acct):
     tuples = [ 
         (
-            { 'label': ROLELABEL, 'properties': {'name':r['Role']} },
+            { 'label': ROLELABEL, 'properties': {'name':r['Role'],'account':acct['Account']} },
             { 'label': 'HAS_INLINE_POLICY', 'properties': {} }, 
-            { 'label': POLICYLABEL, 'properties': {'name': p} } 
+            { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for r in acct['InlinePolicies']['Roles'] for p in r['Policies'] 
     ]
@@ -140,9 +140,9 @@ def dump_role_inline_policies(neo4j,acct):
 def dump_user_inline_policies(neo4j,acct):
     tuples = [ 
         (
-            { 'label': USERLABEL, 'properties': {'name':u['User']} },
+            { 'label': USERLABEL, 'properties': {'name':u['User'],'account':acct['Account']} },
             { 'label': 'HAS_INLINE_POLICY', 'properties': {} }, 
-            { 'label': POLICYLABEL, 'properties': {'name': p} } 
+            { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for u in acct['InlinePolicies']['Users'] for p in u['Policies'] 
     ]
