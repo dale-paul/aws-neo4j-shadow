@@ -28,7 +28,7 @@ class Neo4jHelper():
     # the name must be unique for each label type
     #====================================
     def _make_node(self,tx,args):
-        n = tx.run(
+        tx.run(
             statement=
                 "MERGE (n:" f"{args['label']}" " {name:{properties}.name,account:{properties}.account}) ON CREATE set n={properties}",
             parameters={'properties':args['properties']}
@@ -70,5 +70,10 @@ class Neo4jHelper():
             tx.success = True
         finally:
             tx.close()
+
+    def clear_database(self):
+        self._session.run(
+            statement = "MATCH(n) DETACH DELETE n"
+        )
 
 

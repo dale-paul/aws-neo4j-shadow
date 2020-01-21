@@ -71,20 +71,20 @@ def get_user_credentials_report(acctObj:QPPAccount):
 
 def get_service_access_info(acctObj:QPPAccount, arn, retry = 0):
     """ Generate the IAM Access Report for an User, Group, Role, Policy """
-    rsp = acctObj.api_call('iam','generate_service_last_accessed_details', Arn=arn)
-    jobid = rsp['JobId']
-    while True:
-        rsp = acctObj.api_call('iam','get_service_last_accessed_details',JobId=jobid,MaxItems=999)
-        if rsp['JobStatus'] in ('COMPLETED','FAILED'):
-            break
+    # rsp = acctObj.api_call('iam','generate_service_last_accessed_details', Arn=arn)
+    # jobid = rsp['JobId']
+    # while True:
+    #     rsp = acctObj.api_call('iam','get_service_last_accessed_details',JobId=jobid,MaxItems=999)
+    #     if rsp['JobStatus'] in ('COMPLETED','FAILED'):
+    #         break
 
-    if ( rsp['JobStatus'] == 'COMPLETED'):
-        return [ {'ServiceNamespace':k['ServiceNamespace'],
-                    'LastAuthenticated': epoch_str(k['LastAuthenticated']),
-                    'TotalAuthenticatedEntities': k['TotalAuthenticatedEntities']} 
-                    for k in rsp['ServicesLastAccessed'] if k['TotalAuthenticatedEntities'] > 0]
+    # if ( rsp['JobStatus'] == 'COMPLETED'):
+    #     return [ {'ServiceNamespace':k['ServiceNamespace'],
+    #                 'LastAuthenticated': epoch_str(k['LastAuthenticated']),
+    #                 'TotalAuthenticatedEntities': k['TotalAuthenticatedEntities']} 
+    #                 for k in rsp['ServicesLastAccessed'] if k['TotalAuthenticatedEntities'] > 0]
 
-    logging.error(f"failed to retrieve service access info code: {rsp['Error']['Code']}, msg: {rsp['Error']['Message']}")
+    # logging.error(f"failed to retrieve service access info code: {rsp['Error']['Code']}, msg: {rsp['Error']['Message']}")
     return []
 
 
@@ -251,6 +251,7 @@ def dump_users(acctObj:QPPAccount):
 
 def do_rollups(report):
     """ Rollup data to allow easy cross reference for data in policies list """
+    logging.info(f"Rolling up data for '{report['Alias']}'")
     # Rollup items into groups
     for g in report['Groups']:
         name = g['Name']
@@ -266,7 +267,6 @@ def do_rollups(report):
         r['Policies'] = jmespath.search(f"Policies[?contains(@.Roles,`{name}`)==`true`].Name[]",report)
         r['InlinePolicies'] = jmespath.search(f"InlinePolicies.Roles[?@.Role==`{name}`].Policies[][]",report)
 
-
 def build_account_report(acctObj:QPPAccount):
     """ build the report for an account """
 
@@ -280,14 +280,13 @@ def build_account_report(acctObj:QPPAccount):
         ('InstanceProfiles',dump_instance_profiles)
     ]
     threads = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
         for arg in threadlist:
            threads.append( (arg[0], executor.submit(arg[1],acctObj)))
+
     for k,t in threads:
         account[k] = t.result()
-    do_rollups(account)
     return account
-
 
 def main():
     """ The main process """
@@ -322,6 +321,10 @@ def main():
     for t in threads:
         accounts['Accounts'].append(t.result())
 
+    # do our rollups after all the thread work to avoid race conditions
+    for a in accounts['Accounts']:
+        do_rollups(a)
+
     outstr = json.dumps(accounts,indent=4)
     if args.output:
         args.output.write(outstr)
@@ -329,7 +332,6 @@ def main():
         print(f"sending to neo4j module with arg {args.neo4j}")
     else:
         print(outstr)
-
 
 if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s: %(message)s', level=args.log_level)

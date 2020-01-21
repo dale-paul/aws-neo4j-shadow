@@ -13,7 +13,7 @@
             "console": "integratedTerminal",
             "args": [
                 "--role-name","QPPMGMTRole",
-                //"--account-number","863249929524","941681414890",//"968524040713",
+                //"--account-number","112637689005",//"863249929524",//"941681414890","112637689005",
                 //"--account-alias","aws-hhs-cms-amg-qpp-secops", //"aws-hhs-cms-ccsq-qpp-qppg","aws-hhs-cms-mip",
                 //"--aws-profile","fc-long-term",
                 "--log-level","INFO",

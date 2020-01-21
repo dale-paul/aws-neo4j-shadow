@@ -1,4 +1,5 @@
 import json
+import re
 from neo4jhelpers import Neo4jHelper
 
 USERLABEL = "IAM:USER"
@@ -6,6 +7,9 @@ GROUPLABEL = "IAM:GROUP"
 ROLELABEL = "IAM:ROLE"
 POLICYLABEL = "IAM:POLICY"
 
+def parse_epic_string(str):
+    m = re.match(r'[^0-9-]*(?P<days>-?\d+)',str)
+    return int(m.group(1)) if m else 0 if str == "today" else None
 
 ################################################
 def dump_policies(neo4j,acct):
@@ -58,13 +62,25 @@ def dump_users(neo4j, acct):
         {
             'label':USERLABEL,
             'properties': {
-                'account'     : acct['Account'],
-                'id'          : obj['Id'],
-                'name'        : obj['Name'],
-                'arn'         : obj['Arn'],
-                'mfa'         : obj['CredentialInfo']['mfa_active'], 
-                'active'      : obj['CredentialInfo']['password_enabled'],
-                'access_keys' : obj['CredentialInfo']['access_key_1_active'],
+                'account'       : acct['Account'],
+                'id'            : obj['Id'],
+                'name'          : obj['Name'],
+                'arn'           : obj['Arn'],
+                'mfa'           : obj['CredentialInfo']['mfa_active'], 
+                'active'        : obj['CredentialInfo']['password_enabled'],
+                'access_key'   : obj['CredentialInfo']['access_key_1_active'],
+                'account_age_days'
+                                : parse_epic_string(obj['CredentialInfo']['user_creation_time']),
+                'last_login_days' 
+                                : parse_epic_string(obj['CredentialInfo']['password_last_used']),
+                'last_password_change_days' 
+                                : parse_epic_string(obj['CredentialInfo']['password_last_changed']),
+                'accesskey_last_rotated_days' 
+                                : parse_epic_string(obj['CredentialInfo']['access_key_1_last_rotated']),
+                'accesskey_last_used_days' 
+                                : parse_epic_string(obj['CredentialInfo']['access_key_1_last_used_date']),
+                'password_rotation_due_days'
+                                : parse_epic_string(obj['CredentialInfo']['password_next_rotation']),
             }
         }
         for obj in acct['Users'] 
@@ -153,6 +169,7 @@ with open('test-scripts/QPPFC-1685.json') as f:
     data = json.load(f)
 
 with Neo4jHelper() as neo4j:
+    neo4j.clear_database()
     for acct in data['Accounts']:
         dump_policies(neo4j,acct)
         dump_roles(neo4j,acct)
