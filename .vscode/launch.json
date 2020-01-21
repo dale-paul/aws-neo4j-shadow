@@ -18,7 +18,7 @@
                 //"--aws-profile","fc-long-term",
                 "--log-level","INFO",
                 "--max-threads", "8",
-                //"--neo4j"
+                "--neo4j",
                 "-o","test-scripts/QPPFC-1685.json"
            ]
         }

@@ -1,4 +1,3 @@
-import json
 import re
 from neo4jhelpers import Neo4jHelper
 
@@ -164,24 +163,30 @@ def dump_user_inline_policies(neo4j,acct):
     ]
     neo4j.write_relations(tuples)
 
+def import_to_neo4j(data):
+    if 'Accounts' not in data.keys():
+        raise KeyError("Incorrect import data format")
+    with Neo4jHelper() as neo4j:
+        neo4j.clear_database()
+        for acct in data['Accounts']:
+            dump_policies(neo4j,acct)
+            dump_roles(neo4j,acct)
+            dump_groups(neo4j,acct)
+            dump_users(neo4j,acct)
+            dump_user_policies(neo4j,acct)
+            dump_role_policies(neo4j,acct)
+            dump_group_policies(neo4j,acct)
+            dump_group_users(neo4j,acct)
+            dump_group_inline_policies(neo4j,acct)
+            dump_role_inline_policies(neo4j,acct)
+            dump_user_inline_policies(neo4j,acct)
+
 #===================================
-with open('test-scripts/QPPFC-1685.json') as f:
-    data = json.load(f)
+if __name__ == '__main__':
+    import json
+    with open('test-scripts/QPPFC-1685.json') as f:
+        data = json.load(f)
 
-with Neo4jHelper() as neo4j:
-    neo4j.clear_database()
-    for acct in data['Accounts']:
-        dump_policies(neo4j,acct)
-        dump_roles(neo4j,acct)
-        dump_groups(neo4j,acct)
-        dump_users(neo4j,acct)
-        dump_user_policies(neo4j,acct)
-        dump_role_policies(neo4j,acct)
-        dump_group_policies(neo4j,acct)
-        dump_group_users(neo4j,acct)
-        dump_group_inline_policies(neo4j,acct)
-        dump_role_inline_policies(neo4j,acct)
-        dump_user_inline_policies(neo4j,acct)
-
+    export_to_neo4j(data)
 
 

@@ -3,11 +3,12 @@
 # Author: D Paul - Flexion
 
 import sys,os
+# sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(),'lib'))
+# sys.path.append(os.path.join(os.getcwd(),'neo4jhelpers'))
 
 import boto3
 import argparse
-import json
 import logging
 import time
 import datetime
@@ -19,17 +20,6 @@ import jmespath
 from dateutil import parser as _parser
 from botocore.exceptions import ClientError
 from qppaccounts import QPPAccounts, QPPAccount
-
-parser = argparse.ArgumentParser(description="IAM Policy Usage Report")
-parser.add_argument("--role-name", help="Role to assume in each account")
-parser.add_argument("-o","--output", type=argparse.FileType('w+'), help="JSON formatted file to write results to")
-parser.add_argument("--account-alias", nargs='*', help="Restrict output to this account alias")
-parser.add_argument("--account-number", nargs='*',help="Restrict output to this account number")
-parser.add_argument("--aws-profile", help="AWS Profile to use for credentials")
-parser.add_argument("--log-level", choices=['CRITICAL','ERROR','WARNING','INFO','DEBUG'],default='WARNING',help="Set the logging level")
-parser.add_argument("--max-threads", default="3", type=int, help="Maximum threads for account execution. Default = 3. More can cause throttling errors")
-parser.add_argument("--neo4j", action='store_true', help="put output to neo4j server")
-args = parser.parse_args()
 
 def epoch_str(d1):
     """ return a "days ago" type string for any date relative to today """
@@ -68,7 +58,7 @@ def get_user_credentials_report(acctObj:QPPAccount):
                 }
     return credentials
 
-
+# leaving out for now as there is no immediate use for this data and it is slow to run which would affect lambda execution
 def get_service_access_info(acctObj:QPPAccount, arn, retry = 0):
     """ Generate the IAM Access Report for an User, Group, Role, Policy """
     # rsp = acctObj.api_call('iam','generate_service_last_accessed_details', Arn=arn)
@@ -267,6 +257,7 @@ def do_rollups(report):
         r['Policies'] = jmespath.search(f"Policies[?contains(@.Roles,`{name}`)==`true`].Name[]",report)
         r['InlinePolicies'] = jmespath.search(f"InlinePolicies.Roles[?@.Role==`{name}`].Policies[][]",report)
 
+
 def build_account_report(acctObj:QPPAccount):
     """ build the report for an account """
 
@@ -288,14 +279,17 @@ def build_account_report(acctObj:QPPAccount):
         account[k] = t.result()
     return account
 
-def main():
+
+def generate_iam_report(args:dict):
+    logging.basicConfig(format='%(levelname)s: %(message)s', level=args['log_level'])
+
     """ The main process """
     qppaccounts = []
-    if args.account_alias:
-        for a in args.account_alias:
+    if args['account_alias']:
+        for a in args['account_alias']:
             qppaccounts.append(QPPAccounts().get_account_by_alias(a))
-    elif args.account_number:
-        for a in args.account_number:
+    elif args['account_number']:
+        for a in args['account_number']:
             qppaccounts.append(QPPAccounts().get_account_by_accountnum(a))
     else:
         # Just get the accounts but don't cause any loading of credentials for now
@@ -308,12 +302,12 @@ def main():
     accounts['Metadata'] = {'Creator':rsp['Arn'],'Time': datetime.datetime.now(pytz.timezone('US/Eastern')).isoformat()}
 
     threads = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=args.max_threads) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=args['max_threads']) as executor:
         for acct in qppaccounts:
-            if ( args.role_name ):
-                acct.requested_role = args.role_name #load the credentials
-            elif args.aws_profile:
-                acct.profile = args.aws_profile
+            if ( args['role_name'] ):
+                acct.requested_role = args['role_name'] #load the credentials
+            elif args['aws_profile']:
+                acct.profile = args['aws_profile']
             acct.logger = logging
             threads.append( executor.submit(build_account_report,acct) )
 
@@ -324,16 +318,5 @@ def main():
     # do our rollups after all the thread work to avoid race conditions
     for a in accounts['Accounts']:
         do_rollups(a)
-
-    outstr = json.dumps(accounts,indent=4)
-    if args.output:
-        args.output.write(outstr)
-    elif args.neo4j:
-        print(f"sending to neo4j module with arg {args.neo4j}")
-    else:
-        print(outstr)
-
-if __name__ == "__main__":
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=args.log_level)
-    print("This program will take several minutes to run....")
-    main()
+    
+    return accounts
