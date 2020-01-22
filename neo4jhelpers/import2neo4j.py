@@ -5,6 +5,10 @@ USERLABEL = "IAM:USER"
 GROUPLABEL = "IAM:GROUP"
 ROLELABEL = "IAM:ROLE"
 POLICYLABEL = "IAM:POLICY"
+ILPOLICYLABEL = "IAM:INLINE_POLICY"
+HASMEMBERLABEL = "HAS_MEMBER"
+HASPOLICYLABEL = "HAS_POLICY"
+HASILPOLICYLABEL = "HAS_INLINE_POLICY"
 
 def parse_epic_string(str):
     m = re.match(r'[^0-9-]*(?P<days>-?\d+)',str)
@@ -66,8 +70,8 @@ def dump_users(neo4j, acct):
                 'name'          : obj['Name'],
                 'arn'           : obj['Arn'],
                 'mfa'           : obj['CredentialInfo']['mfa_active'], 
-                'active'        : obj['CredentialInfo']['password_enabled'],
-                'access_key'   : obj['CredentialInfo']['access_key_1_active'],
+                'console_access'        : obj['CredentialInfo']['password_enabled'],
+                'api_access'   : obj['CredentialInfo']['access_key_1_active'],
                 'account_age_days'
                                 : parse_epic_string(obj['CredentialInfo']['user_creation_time']),
                 'last_login_days' 
@@ -90,7 +94,7 @@ def dump_role_policies(neo4j,acct):
     tuples = [ 
         (
             { 'label': ROLELABEL, 'properties': {'name':r['Name'],'account':acct['Account']} },
-            { 'label': 'HAS_POLICY', 'properties': {} }, 
+            { 'label': HASPOLICYLABEL, 'properties': {} }, 
             { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for r in acct['Roles'] for p in r['Policies'] 
@@ -101,7 +105,7 @@ def dump_user_policies(neo4j,acct):
     tuples = [ 
         (
             { 'label': USERLABEL, 'properties': {'name':u['Name'],'account':acct['Account']} },
-            { 'label': 'HAS_POLICY', 'properties': {} }, 
+            { 'label': HASPOLICYLABEL, 'properties': {} }, 
             { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for u in acct['Users'] for p in u['Policies'] 
@@ -112,7 +116,7 @@ def dump_group_policies(neo4j,acct):
     tuples = [ 
         (
             { 'label': GROUPLABEL, 'properties': {'name':g['Name'],'account':acct['Account']} },
-            { 'label': 'HAS_POLICY', 'properties': {} }, 
+            { 'label': HASPOLICYLABEL, 'properties': {} }, 
             { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for g in acct['Groups'] for p in g['Policies'] 
@@ -123,7 +127,7 @@ def dump_group_users(neo4j,acct):
     tuples = [ 
         (
             { 'label': GROUPLABEL, 'properties': {'name': g['Name'],'account':acct['Account']} },
-            { 'label': 'HAS_MEMBER', 'properties': {} }, 
+            { 'label': HASMEMBERLABEL, 'properties': {} }, 
             { 'label': USERLABEL, 'properties': {'name':u,'account':acct['Account']} } 
         ) 
         for g in acct['Groups'] for u in g['Users'] 
@@ -134,33 +138,42 @@ def dump_group_inline_policies(neo4j,acct):
     tuples = [ 
         (
             { 'label': GROUPLABEL, 'properties': {'name':g['Group'],'account':acct['Account']} },
-            { 'label': 'HAS_INLINE_POLICY', 'properties': {} }, 
-            { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
+            { 'label': HASILPOLICYLABEL, 'properties': {} }, 
+            { 'label': ILPOLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for g in acct['InlinePolicies']['Groups'] for p in g['Policies'] 
     ]
+    # first create the inline policy node
+    neo4j.write_nodes([n[2] for n in tuples])
+    # then add the relationship
     neo4j.write_relations(tuples)
 
 def dump_role_inline_policies(neo4j,acct):
     tuples = [ 
         (
             { 'label': ROLELABEL, 'properties': {'name':r['Role'],'account':acct['Account']} },
-            { 'label': 'HAS_INLINE_POLICY', 'properties': {} }, 
-            { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
+            { 'label': HASILPOLICYLABEL, 'properties': {} }, 
+            { 'label': ILPOLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for r in acct['InlinePolicies']['Roles'] for p in r['Policies'] 
     ]
+    # first create the inline policy node
+    neo4j.write_nodes([n[2] for n in tuples])
+    # then add the relationship
     neo4j.write_relations(tuples)
 
 def dump_user_inline_policies(neo4j,acct):
     tuples = [ 
         (
             { 'label': USERLABEL, 'properties': {'name':u['User'],'account':acct['Account']} },
-            { 'label': 'HAS_INLINE_POLICY', 'properties': {} }, 
-            { 'label': POLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
+            { 'label': HASILPOLICYLABEL, 'properties': {} }, 
+            { 'label': ILPOLICYLABEL, 'properties': {'name': p,'account':acct['Account']} } 
         ) 
         for u in acct['InlinePolicies']['Users'] for p in u['Policies'] 
     ]
+     # first create the inline policy node
+    neo4j.write_nodes([n[2] for n in tuples])
+    # then add the relationship
     neo4j.write_relations(tuples)
 
 def import_to_neo4j(data):
@@ -187,6 +200,6 @@ if __name__ == '__main__':
     with open('test-scripts/QPPFC-1685.json') as f:
         data = json.load(f)
 
-    export_to_neo4j(data)
+    import_to_neo4j(data)
 
 
