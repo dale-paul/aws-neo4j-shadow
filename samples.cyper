@@ -1,0 +1,24 @@
+// users with inline policies attached
+match(n:USER {console_access:'true'})-[:HAS_INLINE_POLICY]->(p) 
+WITH n.name as name, n.account as account, p.name as policy 
+ORDER BY name return name, account, policy;
+
+// User key and password info
+match(n:USER {console_access:'true'}) 
+return n.name, n.account, n.active, n.account_age_days,n.last_login_days,n.last_password_change_days,n.password_rotation_due_days,n.api_access,n.accesskey_last_rotated_days;
+
+// users who haven't logged in in over 180 days
+match(n:USER {console_access:'true'})
+where coalesce(n.last_login_days,999) > 180
+with n.account as account, n.name as name
+order by account,name
+with account, collect(name) as names
+return account, names;
+
+// access keys to non-console users that have not been used in 180 days
+match(n:USER {api_access:'true'}) 
+where coalesce(n.accesskey_last_used_days,999) > 180
+with n.account as account, n.name as name
+order by account, name
+with account, collect(name) as names
+return account, names;
