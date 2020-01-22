@@ -16,7 +16,8 @@
         {
             "Effect": "Allow",
             "Resource": [
-                "arn:aws:s3:::codepipeline-${region}*"
+                "arn:aws:s3:::codepipeline-${region}*",
+                "arn:aws:s3:::${codebuild-artifacts-bucket}/*"
             ],
             "Action": [
                 "s3:PutObject",

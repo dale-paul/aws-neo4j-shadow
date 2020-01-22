@@ -56,3 +56,36 @@ resource "aws_codebuild_project" "neo4j_build" {
 
   tags = local.default_tags
 }
+
+resource "aws_kms_key" "neo4j-kms-key" {
+  description             = "This key is used to encrypt neo4j bucket objects"
+  deletion_window_in_days = 10
+  enable_key_rotation     = true
+  tags                    = local.default_tags
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = local.bucket-name
+  acl    = "private"
+  versioning {
+    enabled = true
+  }
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = aws_kms_key.neo4j-kms-key.arn
+        sse_algorithm     = "aws:kms"
+      }
+    }
+  }
+  tags = local.default_tags
+}
+
+resource "aws_s3_bucket_public_access_block" "bucket" {
+  bucket = aws_s3_bucket.bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  restrict_public_buckets = true
+  ignore_public_acls      = true
+}

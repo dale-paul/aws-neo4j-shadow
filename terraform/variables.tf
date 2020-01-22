@@ -24,4 +24,5 @@ locals {
   compute_type         = "BUILD_GENERAL1_SMALL"
   custom_compute_image = "codebuild-al2-impl:latest"
   region               = "us-east-1"
+  bucket-name          = "neo4j-build-output"
 }

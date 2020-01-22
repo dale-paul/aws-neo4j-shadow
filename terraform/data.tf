@@ -40,8 +40,9 @@ data "aws_iam_policy_document" "instance-assume-role-policy" {
 data "template_file" "codebuild_base_policy" {
   template = file("policies/codebuild-base.tpl")
   vars = {
-    region     = local.region
-    account_id = data.aws_caller_identity.current.account_id
+    region                     = local.region
+    account_id                 = data.aws_caller_identity.current.account_id
+    codebuild-artifacts-bucket = local.bucket-name
   }
 }
 
