@@ -5,7 +5,13 @@ provider "aws" {
 resource "aws_iam_role" "codebuild_neo4j_role" {
   name               = "codebuild-neo4j-service-role"
   path               = "/service-role/"
-  assume_role_policy = data.aws_iam_policy_document.instance-assume-role-policy.json
+  assume_role_policy = data.aws_iam_policy_document.codebuild-assume-role-policy.json
+}
+
+resource "aws_iam_role" "build_event_trigger_role" {
+  name               = "codebuild-neo4j-trigger-role"
+  path               = "/service-role/"
+  assume_role_policy = data.aws_iam_policy_document.events-assume-role-policy.json
 }
 
 resource "aws_iam_role_policy" "codebuild_base_policy" {
@@ -90,4 +96,24 @@ resource "aws_codebuild_project" "neo4j_build" {
   }
 
   tags = local.default_tags
+}
+
+resource "aws_cloudwatch_event_rule" "nightly_trigger" {
+  name                = "${var.project}-codebuild-trigger"
+  description         = "Schedule daily build of the ${var.project} codebuild project at 00:00 EST"
+  schedule_expression = local.cron_expression
+  tags                = local.default_tags
+}
+
+resource "aws_cloudwatch_event_target" "codebuild" {
+  rule      = aws_cloudwatch_event_rule.nightly_trigger.name
+  target_id = "TriggerCodeBuikd"
+  arn       = aws_codebuild_project.neo4j_build.arn
+  role_arn  = aws_iam_role.build_event_trigger_role.arn
+}
+
+resource "aws_iam_role_policy" "codebuild_trigger_policy" {
+  name   = "Invoke_CodeBuild_Neo4j"
+  role   = aws_iam_role.build_event_trigger_role.id
+  policy = data.template_file.codebuild_trigger_policy.rendered
 }

@@ -26,13 +26,24 @@ data "template_file" "neo4j-buildspec" {
 }
 
 #CodeBuild role and policies
-data "aws_iam_policy_document" "instance-assume-role-policy" {
+data "aws_iam_policy_document" "codebuild-assume-role-policy" {
   statement {
     actions = ["sts:AssumeRole"]
 
     principals {
       type        = "Service"
       identifiers = ["codebuild.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "events-assume-role-policy" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
     }
   }
 }
@@ -51,6 +62,15 @@ data "template_file" "codebuild_cloudwatch_policy" {
   vars = {
     region     = local.region
     account_id = data.aws_caller_identity.current.account_id
+  }
+}
+
+data "template_file" "codebuild_trigger_policy" {
+  template = file("policies/codebuild-trigger.tpl")
+  vars = {
+    region     = local.region
+    account_id = data.aws_caller_identity.current.account_id
+    project    = var.project
   }
 }
 
