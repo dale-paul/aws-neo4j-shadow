@@ -20,43 +20,6 @@ resource "aws_iam_role_policy" "codebuild_cloudwatch_policy" {
   role   = aws_iam_role.codebuild_neo4j_role.id
 }
 
-resource "aws_codebuild_project" "neo4j_build" {
-  name          = var.project
-  build_timeout = 10
-  badge_enabled = true
-  service_role  = aws_iam_role.codebuild_neo4j_role.arn
-
-  artifacts {
-    type = "NO_ARTIFACTS"
-  }
-
-  source {
-    type                = "GITHUB_ENTERPRISE"
-    location            = "https://github.cms.gov/qpp/AWS_Neo4j_Shadow"
-    git_clone_depth     = 1
-    report_build_status = true
-    insecure_ssl        = false
-    buildspec           = data.template_file.neo4j-buildspec.rendered
-  }
-
-  environment {
-    compute_type                = local.compute_type
-    image                       = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${local.region}.amazonaws.com/${local.custom_compute_image}"
-    image_pull_credentials_type = "SERVICE_ROLE"
-    privileged_mode             = true
-    type                        = "LINUX_CONTAINER"
-  }
-
-  logs_config {
-    cloudwatch_logs {
-      group_name  = "codebuild"
-      stream_name = "${var.project}-build"
-    }
-  }
-
-  tags = local.default_tags
-}
-
 resource "aws_kms_key" "neo4j-kms-key" {
   description             = "This key is used to encrypt neo4j bucket objects"
   deletion_window_in_days = 10
@@ -88,4 +51,43 @@ resource "aws_s3_bucket_public_access_block" "bucket" {
   block_public_policy     = true
   restrict_public_buckets = true
   ignore_public_acls      = true
+}
+resource "aws_codebuild_project" "neo4j_build" {
+  name          = var.project
+  build_timeout = 10
+  badge_enabled = true
+  service_role  = aws_iam_role.codebuild_neo4j_role.arn
+
+  artifacts {
+    type     = "S3"
+    location = local.bucket-name
+    name     = "IAM_SHADOW"
+    # namespace_type = "BUILD_ID"
+  }
+
+  source {
+    type                = "GITHUB_ENTERPRISE"
+    location            = "https://github.cms.gov/qpp/AWS_Neo4j_Shadow"
+    git_clone_depth     = 1
+    report_build_status = true
+    insecure_ssl        = false
+    buildspec           = data.template_file.neo4j-buildspec.rendered
+  }
+
+  environment {
+    compute_type                = local.compute_type
+    image                       = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${local.region}.amazonaws.com/${local.custom_compute_image}"
+    image_pull_credentials_type = "SERVICE_ROLE"
+    privileged_mode             = true
+    type                        = "LINUX_CONTAINER"
+  }
+
+  logs_config {
+    cloudwatch_logs {
+      group_name  = "codebuild"
+      stream_name = "${var.project}-build"
+    }
+  }
+
+  tags = local.default_tags
 }

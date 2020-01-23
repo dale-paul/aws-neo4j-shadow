@@ -15,5 +15,8 @@ phases:
   build:
     commands:
       - echo Build reports `date`
-    commands:
-      - echo `date`
+      - head -c 2048 </dev/urandom >artifact.txt
+artifacts:
+  files:
+    - 'artifact.txt'
+  # name: $Env:TEST_ENV_VARIABLE-$(Get-Date -UFormat "%Y%m%d-%H%M%S")
