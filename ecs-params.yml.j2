@@ -1,0 +1,20 @@
+{% set delimiter = '-' %}
+version: 1
+task_definition:
+  task_execution_role: ecsTaskExecutionRole
+  ecs_network_mode: awsvpc
+  task_size:
+    mem_limit: 8GB
+    cpu_limit: 4096
+run_params:
+  network_configuration:
+    awsvpc_configuration:
+      subnets:
+      {% for item in ids -%}
+      {{delimiter | indent(width=2, indentfirst=true)}} "{{ item }}"
+      {% endfor -%}
+      security_groups:
+      {% for sg in sg_ids -%}
+      {{delimiter | indent(width=2, indentfirst=true)}} "{{ sg }}"
+      {% endfor -%}
+      assign_public_ip: DISABLED

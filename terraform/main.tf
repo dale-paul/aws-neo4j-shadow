@@ -2,6 +2,14 @@ provider "aws" {
   region = local.region
 }
 
+provider "aws" {
+  alias  = "qppg"
+  region = local.region
+  assume_role {
+    role_arn = "arn:aws:iam::${data.aws_ssm_parameter.qppg_account.value}:role/QPPMGMTRole"
+  }
+}
+
 resource "aws_iam_role" "codebuild_neo4j_role" {
   name               = "codebuild-neo4j-service-role"
   path               = "/service-role/"
@@ -90,7 +98,7 @@ resource "aws_codebuild_project" "neo4j_build" {
     environment_variable {
       name  = "NEO4J_URI"
       type  = "PLAINTEXT"
-      value = local.neo4j_uri
+      value = "${local.neo4j_uri}:${local.neo4j_bolt_port}"
     }
   }
 

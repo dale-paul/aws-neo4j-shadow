@@ -73,3 +73,27 @@ data "template_file" "codebuild_trigger_policy" {
     project    = var.project
   }
 }
+
+data "aws_subnet_ids" "app_subnets" {
+  vpc_id = local.vpc_id
+
+  filter {
+    name   = "tag:Name"
+    values = ["*app"]
+  }
+}
+
+data "aws_subnet" "app_group_subnets" {
+  count = length(data.aws_subnet_ids.app_subnets.ids)
+  id    = tolist(data.aws_subnet_ids.app_subnets.ids)[count.index]
+}
+
+data "aws_route53_zone" "qpp_hosted_zone" {
+  name         = "qpp.internal."
+  private_zone = true
+  provider     = aws.qppg
+}
+
+data "aws_ssm_parameter" "qppg_account" {
+  name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-qppg"
+}
