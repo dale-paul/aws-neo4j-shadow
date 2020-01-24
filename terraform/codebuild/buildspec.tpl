@@ -14,7 +14,7 @@ phases:
   build:
     commands:
       - echo Build reports
-      - ls -la
+      -  echo "NEO4J_URI='bolt://localhost:7687'"> .env
       - ./IAMPolicy-audit.py --role-name QPPMGMTRole --log-level INFO --max-threads 8 -o $AUDIT_RESULTS
 artifacts:
   files:
