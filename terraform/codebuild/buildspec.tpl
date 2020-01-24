@@ -1,8 +1,7 @@
 version: 0.2
 env:
   variables:
-    DJANGO_REPO_NAME: "defectdojo-django"
-    NGINX_REPO_NAME: "defectdojo-nginx"
+    AUDIT_RESULTS: "audit-results.json"
 phases:
   install:
     runtime-versions:
@@ -14,9 +13,10 @@ phases:
       - pip install -r requirements.txt
   build:
     commands:
-      - echo Build reports `date`
-      - head -c 2048 </dev/urandom >artifact.txt
+      - echo Build reports
+      - ls -la
+      - ./IAMPolicy-audit.py --role-name QPPMGMTRole --log-level INFO --max-threads 8 -o $AUDIT_RESULTS
 artifacts:
   files:
-    - 'artifact.txt'
+    - $AUDIT_RESULTS
   # name: $Env:TEST_ENV_VARIABLE-$(Get-Date -UFormat "%Y%m%d-%H%M%S")
