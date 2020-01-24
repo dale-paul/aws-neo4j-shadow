@@ -73,9 +73,3 @@ data "template_file" "codebuild_trigger_policy" {
     project    = var.project
   }
 }
-
-resource "aws_iam_role_policy" "codebuild_ecr_policy" {
-  name   = "CodeBuildECSPolicy-neo4j-${local.region}"
-  policy = file("policies/codebuild-ecr.json")
-  role   = aws_iam_role.codebuild_neo4j_role.id
-}

@@ -11,10 +11,10 @@ phases:
       - echo Logging in to Amazon ECR...
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
       - pip install -r requirements.txt
+      - printenv > .env
   build:
     commands:
       - echo Build reports
-      -  echo "NEO4J_URI='bolt://localhost:7687'"> .env
       - ./IAMPolicy-audit.py --role-name QPPMGMTRole --log-level INFO --max-threads 8 -o $AUDIT_RESULTS
 artifacts:
   files:

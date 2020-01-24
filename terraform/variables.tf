@@ -26,4 +26,5 @@ locals {
   region               = "us-east-1"
   bucket-name          = "neo4j-build-output"
   cron_expression      = "cron(0 5 ? * MON-FRI *)"
+  neo4j_uri            = "bolt://localhost:7687"
 }

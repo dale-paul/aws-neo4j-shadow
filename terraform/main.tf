@@ -86,6 +86,12 @@ resource "aws_codebuild_project" "neo4j_build" {
     image_pull_credentials_type = "SERVICE_ROLE"
     privileged_mode             = true
     type                        = "LINUX_CONTAINER"
+
+    environment_variable {
+      name  = "NEO4J_URI"
+      type  = "PLAINTEXT"
+      value = local.neo4j_uri
+    }
   }
 
   logs_config {
@@ -116,4 +122,10 @@ resource "aws_iam_role_policy" "codebuild_trigger_policy" {
   name   = "Invoke_CodeBuild_Neo4j"
   role   = aws_iam_role.build_event_trigger_role.id
   policy = data.template_file.codebuild_trigger_policy.rendered
+}
+
+resource "aws_iam_role_policy" "codebuild_ecr_policy" {
+  name   = "CodeBuildECSPolicy-neo4j-${local.region}"
+  policy = file("policies/codebuild-ecr.json")
+  role   = aws_iam_role.codebuild_neo4j_role.id
 }
