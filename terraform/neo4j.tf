@@ -1,15 +1,16 @@
-data "aws_ecs_task_definition" "neo4j" {
-  task_definition = "${aws_ecs_task_definition.neo4j.family}"
-}
-
 resource "aws_ecs_cluster" "neo4j" {
   name = var.project
 }
 
 resource "aws_ecs_task_definition" "neo4j" {
-  family = "neo4j"
-
-  container_definitions = <<DEFINITION
+  family                   = "neo4j-task"
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  task_role_arn            = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
+  execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
+  cpu                      = 4096
+  memory                   = 8192
+  container_definitions    = <<DEFINITION
 [
   {
     "portMappings": [
@@ -25,30 +26,10 @@ resource "aws_ecs_task_definition" "neo4j" {
       }
     ],
     "image": "neo4j:latest",
-    "name": "neo4j",
-    "memory": 8192,
-    "compatibilities": [
-      "EC2",
-      "FARGATE"
-    ],
-    "requiresCompatibilities": [
-      "FARGATE"
-    ],
-    "networkMode": "awsvpc",
-    "cpu": 4096,
-    "privileged": false
-    }
+    "name": "neo4j"
+  }
 ]
 DEFINITION
-}
-
-resource "aws_ecs_service" "neo4j" {
-  name          = "neo4j"
-  cluster       = aws_ecs_cluster.neo4j.id
-  desired_count = 1
-
-  # Track the latest ACTIVE revision
-  task_definition = "${aws_ecs_task_definition.neo4j.family}:${max("${aws_ecs_task_definition.neo4j.revision}", "${data.aws_ecs_task_definition.neo4j.revision}")}"
 }
 
 resource "aws_lb_target_group" "neo4j_tg" {
@@ -74,19 +55,6 @@ resource "aws_lb_target_group" "neo4j_tg" {
       "layer", "App"
     )
   )
-}
-
-resource "aws_ecs_service" "neo4j_ecs_service" {
-  name            = "neo4j"
-  cluster         = aws_ecs_cluster.neo4j.id
-  task_definition = aws_ecs_task_definition.neo4j.arn
-  desired_count   = 1
-
-  load_balancer {
-    target_group_arn = aws_lb_target_group.neo4j_tg.arn
-    container_name   = "neo4j"
-    container_port   = local.neo4j_web_port
-  }
 }
 
 resource "aws_security_group" "neo4j_sec_gp" {
@@ -127,6 +95,41 @@ resource "aws_security_group" "neo4j_sec_gp" {
     cidr_blocks = [
       "0.0.0.0/0",
     ]
+  }
+}
+
+resource "aws_ecs_service" "neo4j_ecs_service" {
+  name          = "neo4j"
+  cluster       = aws_ecs_cluster.neo4j.id
+  desired_count = 1
+  launch_type   = "FARGATE"
+
+  network_configuration {
+    security_groups = [aws_security_group.neo4j_sec_gp.id]
+    subnets         = data.aws_subnet.app_group_subnets.*.id
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.neo4j_tg.arn
+    container_name   = "neo4j"
+    container_port   = local.neo4j_web_port
+  }
+
+  # Track the latest ACTIVE revision
+  task_definition = aws_ecs_task_definition.neo4j.arn
+  # task_definition = "${aws_ecs_task_definition.neo4j.family}:${max("${aws_ecs_task_definition.neo4j.revision}", "${data.aws_ecs_task_definition.neo4j.revision}")}"
+}
+
+resource "aws_ecs_service" "neo4j_ecs_service" {
+  name            = "neo4j"
+  cluster         = aws_ecs_cluster.neo4j.id
+  task_definition = aws_ecs_task_definition.neo4j.arn
+  desired_count   = 1
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.neo4j_tg.arn
+    container_name   = "neo4j"
+    container_port   = local.neo4j_web_port
   }
 }
 
@@ -176,11 +179,11 @@ resource "aws_lb_listener" "neo4j_lb_http_listener" {
   }
 }
 
-# resource "aws_alb_target_group_attachment" "neo4j_ip" {
-#   target_group_arn = aws_lb_target_group.neo4j_tg.arn
-#   target_id        = local.stage_config_map[terraform.workspace]["cluster_ip"]
-#   port             = local.neo4j_web_port
-# }
+resource "aws_alb_target_group_attachment" "neo4j_ip" {
+  target_group_arn = aws_lb_target_group.neo4j_tg.arn
+  target_id        = local.stage_config_map[terraform.workspace]["cluster_ip"]
+  port             = local.neo4j_web_port
+}
 
 resource "aws_route53_record" "neo4j_dns" {
   zone_id  = data.aws_route53_zone.qpp_hosted_zone.id
