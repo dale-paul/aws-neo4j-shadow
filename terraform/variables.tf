@@ -32,7 +32,7 @@ locals {
   cron_expression      = "cron(0 5 ? * MON-FRI *)"
   app_subnet_filter    = ["*app"]
   vpc_id               = "vpc-05a676a9f7913930d"
-  neo4j_uri            = "bolt://localhost"
+  neo4j_uri            = "bolt://10.246.85.100"
   neo4j_web_port       = 7474
   neo4j_bolt_port      = 7687
 }

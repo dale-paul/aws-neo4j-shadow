@@ -30,7 +30,14 @@
         {
             "Action": [
               "events:*",
-              "iam:PassRole"
+              "iam:PassRole",
+              "ec2:CreateNetworkInterface",
+              "ec2:DescribeDhcpOptions",
+              "ec2:DescribeNetworkInterfaces",
+              "ec2:DeleteNetworkInterface",
+              "ec2:DescribeSubnets",
+              "ec2:DescribeSecurityGroups",
+              "ec2:DescribeVpcs"
             ],
             "Resource": "*",
             "Effect": "Allow"

@@ -65,67 +65,6 @@ resource "aws_lb_target_group" "neo4j_tg" {
   )
 }
 
-resource "aws_security_group" "neo4j_sec_gp" {
-  name        = "neo4j"
-  description = "Control traffic to/from the neo4j Fargate cluster"
-  vpc_id      = local.vpc_id
-  tags        = local.default_tags
-
-  ingress {
-    from_port   = local.neo4j_web_port
-    to_port     = local.neo4j_web_port
-    protocol    = "tcp"
-    cidr_blocks = data.aws_subnet.app_group_subnets.*.cidr_block
-  }
-
-  ingress {
-    from_port   = local.neo4j_bolt_port
-    to_port     = local.neo4j_bolt_port
-    protocol    = "tcp"
-    cidr_blocks = data.aws_subnet.app_group_subnets.*.cidr_block
-  }
-
-  ingress {
-    from_port = 443
-    to_port   = 443
-    protocol  = "tcp"
-
-    cidr_blocks = [
-      "10.0.0.0/8",
-    ]
-  }
-
-  ingress {
-    from_port   = local.neo4j_web_port
-    to_port     = local.neo4j_web_port
-    protocol  = "tcp"
-
-    cidr_blocks = [
-      "10.0.0.0/8",
-    ]
-  }
-
-  ingress {
-    from_port   = local.neo4j_bolt_port
-    to_port     = local.neo4j_bolt_port
-    protocol  = "tcp"
-
-    cidr_blocks = [
-      "10.0.0.0/8",
-    ]
-  }
-
-  egress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-
-    cidr_blocks = [
-      "0.0.0.0/0",
-    ]
-  }
-}
-
 resource "aws_cloudwatch_log_group" "neo4j-log-group" {
   name = "neo4j-services"
 
@@ -149,11 +88,11 @@ resource "aws_ecs_service" "neo4j_ecs_service" {
     subnets         = data.aws_subnet.app_group_subnets.*.id
   }
 
-#  load_balancer {
-#    target_group_arn = aws_lb_target_group.neo4j_tg.arn
-#    container_name   = "neo4j"
-#    container_port   = local.neo4j_web_port
-#  }
+  #  load_balancer {
+  #    target_group_arn = aws_lb_target_group.neo4j_tg.arn
+  #    container_name   = "neo4j"
+  #    container_port   = local.neo4j_web_port
+  #  }
 
   # Track the latest ACTIVE revision
   task_definition = aws_ecs_task_definition.neo4j.arn

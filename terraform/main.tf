@@ -10,6 +10,67 @@ provider "aws" {
   }
 }
 
+resource "aws_security_group" "neo4j_sec_gp" {
+  name        = "neo4j"
+  description = "Control traffic to/from the neo4j Fargate cluster"
+  vpc_id      = local.vpc_id
+  tags        = local.default_tags
+
+  ingress {
+    from_port   = local.neo4j_web_port
+    to_port     = local.neo4j_web_port
+    protocol    = "tcp"
+    cidr_blocks = data.aws_subnet.app_group_subnets.*.cidr_block
+  }
+
+  ingress {
+    from_port   = local.neo4j_bolt_port
+    to_port     = local.neo4j_bolt_port
+    protocol    = "tcp"
+    cidr_blocks = data.aws_subnet.app_group_subnets.*.cidr_block
+  }
+
+  ingress {
+    from_port = 443
+    to_port   = 443
+    protocol  = "tcp"
+
+    cidr_blocks = [
+      "10.0.0.0/8",
+    ]
+  }
+
+  ingress {
+    from_port = local.neo4j_web_port
+    to_port   = local.neo4j_web_port
+    protocol  = "tcp"
+
+    cidr_blocks = [
+      "10.0.0.0/8",
+    ]
+  }
+
+  ingress {
+    from_port = local.neo4j_bolt_port
+    to_port   = local.neo4j_bolt_port
+    protocol  = "tcp"
+
+    cidr_blocks = [
+      "10.0.0.0/8",
+    ]
+  }
+
+  egress {
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+
+    cidr_blocks = [
+      "0.0.0.0/0",
+    ]
+  }
+}
+
 resource "aws_iam_role" "codebuild_neo4j_role" {
   name               = "codebuild-neo4j-service-role"
   path               = "/service-role/"
@@ -115,6 +176,15 @@ resource "aws_codebuild_project" "neo4j_build" {
     }
   }
 
+  vpc_config {
+    vpc_id  = local.vpc_id
+    subnets = data.aws_subnet_ids.app_subnets.ids
+
+
+    security_group_ids = [
+      aws_security_group.neo4j_sec_gp.id
+    ]
+  }
   tags = local.default_tags
 }
 
