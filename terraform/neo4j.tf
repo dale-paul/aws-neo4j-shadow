@@ -120,18 +120,18 @@ resource "aws_ecs_service" "neo4j_ecs_service" {
   # task_definition = "${aws_ecs_task_definition.neo4j.family}:${max("${aws_ecs_task_definition.neo4j.revision}", "${data.aws_ecs_task_definition.neo4j.revision}")}"
 }
 
-resource "aws_ecs_service" "neo4j_ecs_service" {
-  name            = "neo4j"
-  cluster         = aws_ecs_cluster.neo4j.id
-  task_definition = aws_ecs_task_definition.neo4j.arn
-  desired_count   = 1
-
-  load_balancer {
-    target_group_arn = aws_lb_target_group.neo4j_tg.arn
-    container_name   = "neo4j"
-    container_port   = local.neo4j_web_port
-  }
-}
+# resource "aws_ecs_service" "neo4j_ecs_service" {
+#   name            = "neo4j"
+#   cluster         = aws_ecs_cluster.neo4j.id
+#   task_definition = aws_ecs_task_definition.neo4j.arn
+#   desired_count   = 1
+#
+#   load_balancer {
+#     target_group_arn = aws_lb_target_group.neo4j_tg.arn
+#     container_name   = "neo4j"
+#     container_port   = local.neo4j_web_port
+#   }
+# }
 
 resource "aws_lb" "neo4j_alb" {
   name                       = "neo4j-lb"
