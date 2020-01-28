@@ -25,6 +25,14 @@ resource "aws_ecs_task_definition" "neo4j" {
         "containerPort": 7687
       }
     ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "neo4j-services",
+        "awslogs-region": "us-east-1",
+        "awslogs-stream-prefix": "neo4j"
+      }
+    },
     "image": "neo4j:latest",
     "name": "neo4j"
   }
@@ -87,6 +95,26 @@ resource "aws_security_group" "neo4j_sec_gp" {
     ]
   }
 
+  ingress {
+    from_port   = local.neo4j_web_port
+    to_port     = local.neo4j_web_port
+    protocol  = "tcp"
+
+    cidr_blocks = [
+      "10.0.0.0/8",
+    ]
+  }
+
+  ingress {
+    from_port   = local.neo4j_bolt_port
+    to_port     = local.neo4j_bolt_port
+    protocol  = "tcp"
+
+    cidr_blocks = [
+      "10.0.0.0/8",
+    ]
+  }
+
   egress {
     from_port = 0
     to_port   = 0
@@ -96,6 +124,18 @@ resource "aws_security_group" "neo4j_sec_gp" {
       "0.0.0.0/0",
     ]
   }
+}
+
+resource "aws_cloudwatch_log_group" "neo4j-log-group" {
+  name = "neo4j-services"
+
+  tags = merge(
+    local.default_tags,
+    map(
+      "Type", "private",
+      "layer", "App"
+    )
+  )
 }
 
 resource "aws_ecs_service" "neo4j_ecs_service" {
@@ -109,11 +149,11 @@ resource "aws_ecs_service" "neo4j_ecs_service" {
     subnets         = data.aws_subnet.app_group_subnets.*.id
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.neo4j_tg.arn
-    container_name   = "neo4j"
-    container_port   = local.neo4j_web_port
-  }
+#  load_balancer {
+#    target_group_arn = aws_lb_target_group.neo4j_tg.arn
+#    container_name   = "neo4j"
+#    container_port   = local.neo4j_web_port
+#  }
 
   # Track the latest ACTIVE revision
   task_definition = aws_ecs_task_definition.neo4j.arn
@@ -132,6 +172,7 @@ resource "aws_ecs_service" "neo4j_ecs_service" {
 #     container_port   = local.neo4j_web_port
 #   }
 # }
+
 
 resource "aws_lb" "neo4j_alb" {
   name                       = "neo4j-lb"
@@ -179,11 +220,11 @@ resource "aws_lb_listener" "neo4j_lb_http_listener" {
   }
 }
 
-resource "aws_route53_record" "neo4j_dns" {
-  zone_id  = data.aws_route53_zone.qpp_hosted_zone.id
-  name     = "neo4j.qpp.internal"
-  type     = "CNAME"
-  ttl      = "300"
-  records  = [aws_lb.neo4j_alb.dns_name]
-  provider = aws.qppg
-}
+#resource "aws_route53_record" "neo4j_dns" {
+#  zone_id  = data.aws_route53_zone.qpp_hosted_zone.id
+#  name     = "neo4j.qpp.internal"
+#  type     = "CNAME"
+#  ttl      = "300"
+#  records  = [aws_lb.neo4j_alb.dns_name]
+#  provider = aws.qppg
+#}
