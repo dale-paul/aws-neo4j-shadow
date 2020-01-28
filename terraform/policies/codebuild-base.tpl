@@ -45,6 +45,21 @@
         {
             "Effect": "Allow",
             "Action": [
+                "ec2:CreateNetworkInterfacePermission"
+            ],
+            "Resource": "arn:aws:ec2:${region}:${account_id}:network-interface/*",
+            "Condition": {
+                "StringEquals": {
+                    "ec2:Subnet": [
+                        "arn:aws:ec2:${region}:${account_id}:subnet/${subnet}"
+                    ],
+                    "ec2:AuthorizedService": "codebuild.amazonaws.com"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
                 "codebuild:CreateReportGroup",
                 "codebuild:CreateReport",
                 "codebuild:UpdateReport",

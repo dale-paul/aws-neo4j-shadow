@@ -79,6 +79,7 @@ data "template_file" "codebuild_base_policy" {
     region                     = local.region
     account_id                 = data.aws_caller_identity.current.account_id
     codebuild-artifacts-bucket = local.bucket-name
+    subnet                     = tolist(data.aws_subnet_ids.app_subnets.ids)[0]
   }
 }
 
