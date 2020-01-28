@@ -46,6 +46,15 @@
             "Resource": [
                 "arn:aws:codebuild:${region}:${account_id}:report-group/neo4j-build*"
             ]
+        },
+        {
+            "Effect": "Allow",
+            "Action":[
+              "sts:AssumeRole"
+            ],
+            "Resource": [
+                "arn:aws:iam::${account_id}:role/neo4j-iam-audit-role"
+            ]
         }
     ]
 }
