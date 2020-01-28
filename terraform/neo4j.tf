@@ -179,12 +179,6 @@ resource "aws_lb_listener" "neo4j_lb_http_listener" {
   }
 }
 
-resource "aws_alb_target_group_attachment" "neo4j_ip" {
-  target_group_arn = aws_lb_target_group.neo4j_tg.arn
-  target_id        = local.stage_config_map[terraform.workspace]["cluster_ip"]
-  port             = local.neo4j_web_port
-}
-
 resource "aws_route53_record" "neo4j_dns" {
   zone_id  = data.aws_route53_zone.qpp_hosted_zone.id
   name     = "neo4j.qpp.internal"

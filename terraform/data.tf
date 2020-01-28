@@ -21,8 +21,33 @@ locals {
 
 data "aws_caller_identity" "current" {}
 
+data "aws_iam_policy_document" "codebuild_crossaccount_policy" {
+  statement {
+    sid    = "XAcctPolicy"
+    effect = "Allow"
+
+    actions = [
+      "sts:AssumeRole"
+    ]
+
+    resources = [
+      for account_id in [data.aws_ssm_parameter.qppg_account.value,
+        data.aws_ssm_parameter.cm_account.value,
+        data.aws_ssm_parameter.aws-hhs-cms-amg-qpp-costscoring.value,
+        data.aws_ssm_parameter.aws-hhs-cms-amg-qpp-selfn.value,
+        data.aws_ssm_parameter.aws-hhs-cms-ccsq-qpp-navadevops.value,
+        data.aws_ssm_parameter.aws-hhs-cms-ccsq-qpp-semanticbits.value,
+      data.aws_ssm_parameter.aws-hhs-cms-mip.value] :
+      "arn:aws:iam::${account_id}:role/neo4j-iam-audit-role"
+    ]
+  }
+}
+
 data "template_file" "neo4j-buildspec" {
   template = file("codebuild/buildspec.tpl")
+  vars = {
+    accounts = "${data.aws_ssm_parameter.qppg_account.value} ${data.aws_ssm_parameter.cm_account.value} ${data.aws_ssm_parameter.aws-hhs-cms-amg-qpp-costscoring.value} ${data.aws_ssm_parameter.aws-hhs-cms-amg-qpp-selfn.value} ${data.aws_ssm_parameter.aws-hhs-cms-ccsq-qpp-navadevops.value} ${data.aws_ssm_parameter.aws-hhs-cms-ccsq-qpp-semanticbits.value} ${data.aws_ssm_parameter.aws-hhs-cms-mip.value}"
+  }
 }
 
 #CodeBuild role and policies
@@ -96,4 +121,28 @@ data "aws_route53_zone" "qpp_hosted_zone" {
 
 data "aws_ssm_parameter" "qppg_account" {
   name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-qppg"
+}
+
+data "aws_ssm_parameter" "cm_account" {
+  name = "/accounts/qpp/aws-hhs-cms-amg-qpp-cm"
+}
+
+data "aws_ssm_parameter" "aws-hhs-cms-amg-qpp-costscoring" {
+  name = "/accounts/qpp/aws-hhs-cms-amg-qpp-costscoring"
+}
+
+data "aws_ssm_parameter" "aws-hhs-cms-amg-qpp-selfn" {
+  name = "/accounts/qpp/aws-hhs-cms-amg-qpp-selfn"
+}
+
+data "aws_ssm_parameter" "aws-hhs-cms-ccsq-qpp-navadevops" {
+  name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-navadevops"
+}
+
+data "aws_ssm_parameter" "aws-hhs-cms-ccsq-qpp-semanticbits" {
+  name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-semanticbits"
+}
+
+data "aws_ssm_parameter" "aws-hhs-cms-mip" {
+  name = "/accounts/qpp/aws-hhs-cms-mip"
 }

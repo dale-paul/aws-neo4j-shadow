@@ -15,8 +15,11 @@ phases:
   build:
     commands:
       - echo Build reports
-      - ./IAMPolicy-audit.py --role-name QPPMGMTRole --log-level INFO --max-threads 8 -o $AUDIT_RESULTS
+      - ./IAMPolicy-audit.py --account-number ${accounts}
+          --role-name neo4j-iam-audit-role
+          --log-level WARNING
+          --max-threads 8
+          -o $AUDIT_RESULTS
 artifacts:
   files:
     - $AUDIT_RESULTS
-  # name: $Env:TEST_ENV_VARIABLE-$(Get-Date -UFormat "%Y%m%d-%H%M%S")

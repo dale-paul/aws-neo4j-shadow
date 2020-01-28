@@ -34,6 +34,12 @@ resource "aws_iam_role_policy" "codebuild_cloudwatch_policy" {
   role   = aws_iam_role.codebuild_neo4j_role.id
 }
 
+resource "aws_iam_role_policy" "codebuild_crossaccount_policy" {
+  name   = "neo4j-assume-role-inline-policy"
+  policy = data.aws_iam_policy_document.codebuild_crossaccount_policy.json
+  role   = aws_iam_role.codebuild_neo4j_role.id
+}
+
 resource "aws_kms_key" "neo4j-kms-key" {
   description             = "This key is used to encrypt neo4j bucket objects"
   deletion_window_in_days = 10
