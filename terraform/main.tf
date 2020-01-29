@@ -178,7 +178,7 @@ resource "aws_codebuild_project" "neo4j_build" {
 
   vpc_config {
     vpc_id  = local.vpc_id
-    subnets = data.aws_subnet_ids.app_subnets.ids
+    subnets = [tolist(data.aws_subnet_ids.app_subnets.ids)[0]]
 
 
     security_group_ids = [
