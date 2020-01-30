@@ -1,11 +1,14 @@
 from neo4j import GraphDatabase
 import os
 import dotenv 
+import logging
 
 NEO4J_URI = os.environ['NEO4J_URI']
 
 class Neo4jHelper():
     def __init__(self):
+        logging.basicConfig(format='%(levelname)s: %(message)s', level='INFO')
+        logging.info(f'Neo4j environment url is: {NEO4J_URI}')
         self._driver = GraphDatabase.driver(NEO4J_URI)
         self._session = None
 
