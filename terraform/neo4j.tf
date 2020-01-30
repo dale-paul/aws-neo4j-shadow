@@ -25,6 +25,9 @@ resource "aws_ecs_task_definition" "neo4j" {
         "containerPort": 7687
       }
     ],
+    "environment": [
+      {"name": "NEO4J_dbms_security_auth__enabled", "value": "false"}
+    ],
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
@@ -33,7 +36,7 @@ resource "aws_ecs_task_definition" "neo4j" {
         "awslogs-stream-prefix": "neo4j"
       }
     },
-    "image": "neo4j:latest",
+    "image": "neo4j:3.5",
     "name": "neo4j"
   }
 ]
