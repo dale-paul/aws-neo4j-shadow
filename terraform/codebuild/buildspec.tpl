@@ -17,7 +17,6 @@ phases:
       - echo Build reports
       - #./IAMPolicy-audit.py --account-number ${accounts}
       - ./IAMPolicy-audit.py 
-          --account-number  863249929524
           --role-name neo4j-iam-audit-role
           --log-level WARNING
           --max-threads 8
