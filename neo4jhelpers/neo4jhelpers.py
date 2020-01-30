@@ -33,7 +33,6 @@ class Neo4jHelper():
     def _make_node(self,tx,args):
         tx.run(
             statement=
-                "CYPHER 3.5"
                 "MERGE (n:" f"{args['label']}" " {name:{properties}.name,account:{properties}.account}) ON CREATE set n={properties}",
             parameters={'properties':args['properties']}
         )
@@ -41,7 +40,6 @@ class Neo4jHelper():
     def _make_rel(self,tx,n1,rel,n2):
         tx.run(
             statement=
-                "CYPHER 3.5"
                 "MATCH (n1:" f"{n1['label']}" "{name:{n1}.name,account:{n1}.account}) "
                 "MATCH (n2:" f"{n2['label']}" "{name:{n2}.name,account:{n2}.account}) "
                 "MERGE (n1)-[r:" f"{rel['label']}" "]->(n2) ON CREATE set r={properties}",
