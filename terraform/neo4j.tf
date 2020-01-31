@@ -39,7 +39,7 @@ resource "aws_ecs_task_definition" "neo4j" {
         "awslogs-stream-prefix": "neo4j"
       }
     },
-    "image": "neo4j:3.5",
+    "image": "neo4j:latest",
     "name": "neo4j"
   }
 ]
