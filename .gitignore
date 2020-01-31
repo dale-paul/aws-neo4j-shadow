@@ -2,4 +2,5 @@
 test-scripts
 __pycache__
 .terraform
+.DS_Store
 ecs-params.yml

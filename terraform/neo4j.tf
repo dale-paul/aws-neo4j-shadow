@@ -26,7 +26,10 @@ resource "aws_ecs_task_definition" "neo4j" {
       }
     ],
     "environment": [
-      {"name": "NEO4J_dbms_security_auth__enabled", "value": "false"}
+      {
+        "name": "NEO4J_dbms_security_auth__enabled", 
+        "value": "false"
+      }
     ],
     "logConfiguration": {
       "logDriver": "awslogs",
