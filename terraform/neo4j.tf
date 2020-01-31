@@ -47,16 +47,18 @@ DEFINITION
 }
 
 resource "aws_lb_target_group" "neo4j_tg" {
-  name     = "neo4j-tg"
-  port     = local.neo4j_web_port
-  protocol = "HTTP"
-  vpc_id   = local.vpc_id
+  name        = "neo4j-tg"
+  port        = local.neo4j_web_port
+  protocol    = "HTTP"
+  vpc_id      = local.vpc_id
+  target_type = "ip"
+  slow_start  = 30
   health_check {
     enabled             = true
     healthy_threshold   = 5
     interval            = 30
     matcher             = "200"
-    path                = "/browser"
+    path                = "/browser/"
     port                = "traffic-port"
     protocol            = "HTTP"
     timeout             = 5
@@ -94,11 +96,11 @@ resource "aws_ecs_service" "neo4j_ecs_service" {
     subnets         = data.aws_subnet.app_group_subnets.*.id
   }
 
-  #  load_balancer {
-  #    target_group_arn = aws_lb_target_group.neo4j_tg.arn
-  #    container_name   = "neo4j"
-  #    container_port   = local.neo4j_web_port
-  #  }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.neo4j_tg.id
+    container_name   = "neo4j"
+    container_port   = local.neo4j_web_port
+  }
 
   # Track the latest ACTIVE revision
   task_definition = aws_ecs_task_definition.neo4j.arn
