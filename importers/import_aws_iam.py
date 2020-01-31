@@ -63,7 +63,7 @@ def get_service_access_info(acctObj:QPPAccount, arn, retry = 0):
     """ Generate the IAM Access Report for an User, Group, Role, Policy """
     rsp = acctObj.api_call('iam','generate_service_last_accessed_details', Arn=arn)
     jobid = rsp['JobId']
-    while True:
+    while time.sleep(1) or True:
         rsp = acctObj.api_call('iam','get_service_last_accessed_details',JobId=jobid,MaxItems=999)
         if rsp['JobStatus'] in ('COMPLETED','FAILED'):
             break
