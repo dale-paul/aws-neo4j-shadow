@@ -4,3 +4,4 @@ __pycache__
 .terraform
 .DS_Store
 ecs-params.yml
+.vscode
