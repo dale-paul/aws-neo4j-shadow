@@ -61,20 +61,20 @@ def get_user_credentials_report(acctObj:QPPAccount):
 # leaving out for now as there is no immediate use for this data and it is slow to run which would affect lambda execution
 def get_service_access_info(acctObj:QPPAccount, arn, retry = 0):
     """ Generate the IAM Access Report for an User, Group, Role, Policy """
-    # rsp = acctObj.api_call('iam','generate_service_last_accessed_details', Arn=arn)
-    # jobid = rsp['JobId']
-    # while time.sleep(1) or True:
-    #     rsp = acctObj.api_call('iam','get_service_last_accessed_details',JobId=jobid,MaxItems=999)
-    #     if rsp['JobStatus'] in ('COMPLETED','FAILED'):
-    #         break
+    rsp = acctObj.api_call('iam','generate_service_last_accessed_details', Arn=arn)
+    jobid = rsp['JobId']
+    while time.sleep(1) or True:
+        rsp = acctObj.api_call('iam','get_service_last_accessed_details',JobId=jobid,MaxItems=999)
+        if rsp['JobStatus'] in ('COMPLETED','FAILED'):
+            break
 
-    # if ( rsp['JobStatus'] == 'COMPLETED'):
-    #     return [ {'ServiceNamespace':k['ServiceNamespace'],
-    #                 'LastAuthenticated': epoch_str(k['LastAuthenticated']),
-    #                 'TotalAuthenticatedEntities': k['TotalAuthenticatedEntities']} 
-    #                 for k in rsp['ServicesLastAccessed'] if k['TotalAuthenticatedEntities'] > 0]
+    if ( rsp['JobStatus'] == 'COMPLETED'):
+        return [ {'ServiceNamespace':k['ServiceNamespace'],
+                    'LastAuthenticated': epoch_str(k['LastAuthenticated']),
+                    'TotalAuthenticatedEntities': k['TotalAuthenticatedEntities']} 
+                    for k in rsp['ServicesLastAccessed'] if k['TotalAuthenticatedEntities'] > 0]
 
-    # logging.error(f"failed to retrieve service access info code: {rsp['Error']['Code']}, msg: {rsp['Error']['Message']}")
+    logging.error(f"failed to retrieve service access info code: {rsp['Error']['Code']}, msg: {rsp['Error']['Message']}")
     return []
 
 
