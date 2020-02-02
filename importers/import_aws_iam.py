@@ -154,7 +154,7 @@ def dump_policies(acctObj:QPPAccount):
         policy['Groups'] = [ i['GroupName'] for i in x['PolicyGroups'] ]
         policy['Users'] = [ i['UserName'] for i in x['PolicyUsers'] ]
         policy['Roles'] = [ i['RoleName'] for i in x['PolicyRoles'] ]
-        policy['LastServiceAccess'] = get_service_access_info(acctObj,arn)
+        policy['LastServiceAccess'] = [] #get_service_access_info(acctObj,arn)
         logging.info(f"\t{policy['Arn']}")
         policies.append(policy)
     return policies
@@ -196,7 +196,7 @@ def dump_groups(acctObj:QPPAccount):
         group['Name'] = f['GroupName']
         group['Arn'] = f['Arn']
         group['Id'] = f['GroupId']
-        group['LastServiceAccess'] = get_service_access_info(acctObj,f['Arn'])
+        group['LastServiceAccess'] = [] #get_service_access_info(acctObj,f['Arn'])
         groups.append(group)
     return groups
 

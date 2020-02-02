@@ -22,3 +22,8 @@ with n.account as account, n.name as name
 order by account, name
 with account, collect(name) as names
 return account, names;
+
+//Services used
+match(n:SERVICE) 
+with n.account as account, collect(n.name) as services  order by services, account 
+return account, services;
