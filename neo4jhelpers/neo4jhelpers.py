@@ -1,7 +1,7 @@
 from neo4j import GraphDatabase
 import os
-import dotenv 
-import logging
+import dotenv
+dotenv.load_dotenv()
 
 NEO4J_URI = os.environ['NEO4J_URI']
 
@@ -78,5 +78,3 @@ class Neo4jHelper():
         self._session.run(
             statement = "MATCH(n) DETACH DELETE n"
         )
-
-

@@ -1,5 +1,4 @@
 .venv
-test-scripts
 __pycache__
 .terraform
 .DS_Store
