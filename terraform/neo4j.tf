@@ -46,24 +46,33 @@ resource "aws_ecs_task_definition" "neo4j" {
 DEFINITION
 }
 
-resource "aws_lb_target_group" "neo4j_tg" {
-  name        = "neo4j-tg"
+resource "aws_lb_target_group" "neo4j_web_tg" {
+  name        = "neo4j-web-tg"
   port        = local.neo4j_web_port
-  protocol    = "HTTP"
+  protocol    = "TCP"
   vpc_id      = local.vpc_id
   target_type = "ip"
-  slow_start  = 30
-  health_check {
-    enabled             = true
-    healthy_threshold   = 5
-    interval            = 30
-    matcher             = "200"
-    path                = "/browser/"
-    port                = "traffic-port"
-    protocol            = "HTTP"
-    timeout             = 5
-    unhealthy_threshold = 2
+  # slow_start  = 30
+  stickiness {
+    enabled = false
+    type    = "lb_cookie"
   }
+
+  tags = merge(
+    local.default_tags,
+    map(
+      "Type", "private",
+      "layer", "App"
+    )
+  )
+}
+
+resource "aws_lb_target_group" "neo4j_bolt_tg" {
+  name        = "neo4j-bolt-tg"
+  port        = local.neo4j_bolt_port
+  protocol    = "TCP"
+  vpc_id      = local.vpc_id
+  target_type = "ip"
   tags = merge(
     local.default_tags,
     map(
@@ -97,22 +106,24 @@ resource "aws_ecs_service" "neo4j_ecs_service" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.neo4j_tg.id
+    target_group_arn = aws_lb_target_group.neo4j_web_tg.id
     container_name   = "neo4j"
     container_port   = local.neo4j_web_port
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.neo4j_bolt_tg.id
+    container_name   = "neo4j"
+    container_port   = local.neo4j_bolt_port
+  }
+
   # Track the latest ACTIVE revision
   task_definition = aws_ecs_task_definition.neo4j.arn
-  # task_definition = "${aws_ecs_task_definition.neo4j.family}:${max("${aws_ecs_task_definition.neo4j.revision}", "${data.aws_ecs_task_definition.neo4j.revision}")}"
 }
 
-resource "aws_lb" "neo4j_alb" {
+resource "aws_lb" "neo4j_nlb" {
   name                       = "neo4j-lb"
-  internal                   = true
-  load_balancer_type         = "application"
-  security_groups            = [aws_security_group.neo4j_sec_gp.id]
-  ip_address_type            = "ipv4"
+  load_balancer_type         = "network"
   subnets                    = data.aws_subnet.app_group_subnets.*.id
   enable_deletion_protection = true
   tags = merge(
@@ -124,40 +135,33 @@ resource "aws_lb" "neo4j_alb" {
   )
 }
 
-resource "aws_lb_listener" "neo4j_lb_https_listener" {
-  load_balancer_arn = aws_lb.neo4j_alb.arn
-  port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-FS-1-2-2019-08"
-  certificate_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:server-certificate/${var.cert_name}"
+resource "aws_lb_listener" "https_listener" {
+  load_balancer_arn = aws_lb.neo4j_nlb.arn
+  port              = local.neo4j_web_port
+  protocol          = "TCP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.neo4j_tg.arn
+    target_group_arn = aws_lb_target_group.neo4j_web_tg.arn
   }
 }
 
-# Redirect HTTP to HTTPS
-resource "aws_lb_listener" "neo4j_lb_http_listener" {
-  load_balancer_arn = aws_lb.neo4j_alb.arn
-  port              = "80"
-  protocol          = "HTTP"
+# Bolt protocol thru the NLB
+resource "aws_lb_listener" "bolt_listener" {
+  load_balancer_arn = aws_lb.neo4j_nlb.arn
+  port              = local.neo4j_bolt_port
+  protocol          = "TCP"
   default_action {
-    type = "redirect"
-
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_302"
-    }
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.neo4j_bolt_tg.arn
   }
 }
 
 resource "aws_route53_record" "neo4j_dns" {
   zone_id  = data.aws_route53_zone.qpp_hosted_zone.id
-  name     = "neo4j.qpp.internal"
+  name     = local.neo4j_uri
   type     = "CNAME"
   ttl      = "300"
-  records  = [aws_lb.neo4j_alb.dns_name]
+  records  = [aws_lb.neo4j_nlb.dns_name]
   provider = aws.qppg
 }

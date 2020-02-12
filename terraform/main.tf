@@ -165,7 +165,7 @@ resource "aws_codebuild_project" "neo4j_build" {
     environment_variable {
       name  = "NEO4J_URI"
       type  = "PLAINTEXT"
-      value = "${local.neo4j_uri}:${local.neo4j_bolt_port}"
+      value = "bolt://${local.neo4j_uri}:${local.neo4j_bolt_port}"
     }
   }
 
