@@ -5,7 +5,10 @@ ORDER BY name return name, account, policy;
 
 // User key and password info
 match(n:USER {console_access:'true'}) 
-return n.name, n.account, n.active, n.account_age_days,n.last_login_days,n.last_password_change_days,n.password_rotation_due_days,n.api_access,n.accesskey_last_rotated_days;
+with n order by n.account, n.name
+return n.name, n.account, n.console_access, n.account_age_days,
+n.last_login_days,n.last_password_change_days,
+n.password_rotation_due_days,n.api_access,n.accesskey_last_rotated_days;
 
 // users who haven't logged in in over 180 days
 match(n:USER {console_access:'true'})
@@ -27,3 +30,4 @@ return account, names;
 match(n:SERVICE) 
 with n.account as account, collect(n.name) as services  order by services, account 
 return account, services;
+
