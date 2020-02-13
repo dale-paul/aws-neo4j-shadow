@@ -24,7 +24,6 @@ locals {
 
 data "aws_caller_identity" "current" {}
 
-
 data "aws_ssm_parameter" "accounts" {
   count = local.aws_acct_count
   name  = "/accounts/qpp/${element(var.aws_accounts, count.index)}"
@@ -134,27 +133,3 @@ data "aws_route53_zone" "qpp_hosted_zone" {
 data "aws_ssm_parameter" "qppg_account" {
   name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-qppg"
 }
-#
-# data "aws_ssm_parameter" "cm_account" {
-#   name = "/accounts/qpp/aws-hhs-cms-amg-qpp-cm"
-# }
-#
-# data "aws_ssm_parameter" "aws-hhs-cms-amg-qpp-costscoring" {
-#   name = "/accounts/qpp/aws-hhs-cms-amg-qpp-costscoring"
-# }
-#
-# data "aws_ssm_parameter" "aws-hhs-cms-amg-qpp-selfn" {
-#   name = "/accounts/qpp/aws-hhs-cms-amg-qpp-selfn"
-# }
-#
-# data "aws_ssm_parameter" "aws-hhs-cms-ccsq-qpp-navadevops" {
-#   name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-navadevops"
-# }
-#
-# data "aws_ssm_parameter" "aws-hhs-cms-ccsq-qpp-semanticbits" {
-#   name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-semanticbits"
-# }
-#
-# data "aws_ssm_parameter" "aws-hhs-cms-mip" {
-#   name = "/accounts/qpp/aws-hhs-cms-mip"
-# }
