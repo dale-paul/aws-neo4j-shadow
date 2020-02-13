@@ -31,16 +31,6 @@ resource "aws_security_group" "neo4j_sec_gp" {
   }
 
   ingress {
-    from_port = 443
-    to_port   = 443
-    protocol  = "tcp"
-
-    cidr_blocks = [
-      "10.0.0.0/8",
-    ]
-  }
-
-  ingress {
     from_port = local.neo4j_web_port
     to_port   = local.neo4j_web_port
     protocol  = "tcp"

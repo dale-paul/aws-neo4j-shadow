@@ -15,11 +15,20 @@ locals {
       "application", "${var.application}",
       "business", "${var.business}",
       "project", "${var.project}",
+      "Type", "private",
+      "layer", "App"
     )
   )
+  aws_acct_count = length(var.aws_accounts)
 }
 
 data "aws_caller_identity" "current" {}
+
+
+data "aws_ssm_parameter" "accounts" {
+  count = local.aws_acct_count
+  name  = "/accounts/qpp/${element(var.aws_accounts, count.index)}"
+}
 
 data "aws_iam_policy_document" "codebuild_crossaccount_policy" {
   statement {
@@ -31,23 +40,14 @@ data "aws_iam_policy_document" "codebuild_crossaccount_policy" {
     ]
 
     resources = [
-      for account_id in [data.aws_ssm_parameter.qppg_account.value,
-        data.aws_ssm_parameter.cm_account.value,
-        data.aws_ssm_parameter.aws-hhs-cms-amg-qpp-costscoring.value,
-        data.aws_ssm_parameter.aws-hhs-cms-amg-qpp-selfn.value,
-        data.aws_ssm_parameter.aws-hhs-cms-ccsq-qpp-navadevops.value,
-        data.aws_ssm_parameter.aws-hhs-cms-ccsq-qpp-semanticbits.value,
-      data.aws_ssm_parameter.aws-hhs-cms-mip.value] :
-      "arn:aws:iam::${account_id}:role/neo4j-iam-audit-role"
+      for account_id in data.aws_ssm_parameter.accounts[*] :
+      "arn:aws:iam::${account_id.value}:role/neo4j-iam-audit-role"
     ]
   }
 }
 
 data "template_file" "neo4j-buildspec" {
   template = file("codebuild/buildspec.tpl")
-  vars = {
-    accounts = "${data.aws_ssm_parameter.qppg_account.value} ${data.aws_ssm_parameter.cm_account.value} ${data.aws_ssm_parameter.aws-hhs-cms-amg-qpp-costscoring.value} ${data.aws_ssm_parameter.aws-hhs-cms-amg-qpp-selfn.value} ${data.aws_ssm_parameter.aws-hhs-cms-ccsq-qpp-navadevops.value} ${data.aws_ssm_parameter.aws-hhs-cms-ccsq-qpp-semanticbits.value} ${data.aws_ssm_parameter.aws-hhs-cms-mip.value}"
-  }
 }
 
 #CodeBuild role and policies
@@ -100,6 +100,17 @@ data "template_file" "codebuild_trigger_policy" {
   }
 }
 
+data "template_file" "neo4j_task_definition" {
+  template = file("fargate/neo4j_task.tpl")
+  vars = {
+    region            = local.region
+    http_port         = local.neo4j_web_port
+    bolt_port         = local.neo4j_bolt_port
+    container_version = var.container_version
+    auth_enabled      = var.dbms_security_auth_enabled
+  }
+}
+
 data "aws_subnet_ids" "app_subnets" {
   vpc_id = local.vpc_id
 
@@ -123,27 +134,27 @@ data "aws_route53_zone" "qpp_hosted_zone" {
 data "aws_ssm_parameter" "qppg_account" {
   name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-qppg"
 }
-
-data "aws_ssm_parameter" "cm_account" {
-  name = "/accounts/qpp/aws-hhs-cms-amg-qpp-cm"
-}
-
-data "aws_ssm_parameter" "aws-hhs-cms-amg-qpp-costscoring" {
-  name = "/accounts/qpp/aws-hhs-cms-amg-qpp-costscoring"
-}
-
-data "aws_ssm_parameter" "aws-hhs-cms-amg-qpp-selfn" {
-  name = "/accounts/qpp/aws-hhs-cms-amg-qpp-selfn"
-}
-
-data "aws_ssm_parameter" "aws-hhs-cms-ccsq-qpp-navadevops" {
-  name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-navadevops"
-}
-
-data "aws_ssm_parameter" "aws-hhs-cms-ccsq-qpp-semanticbits" {
-  name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-semanticbits"
-}
-
-data "aws_ssm_parameter" "aws-hhs-cms-mip" {
-  name = "/accounts/qpp/aws-hhs-cms-mip"
-}
+#
+# data "aws_ssm_parameter" "cm_account" {
+#   name = "/accounts/qpp/aws-hhs-cms-amg-qpp-cm"
+# }
+#
+# data "aws_ssm_parameter" "aws-hhs-cms-amg-qpp-costscoring" {
+#   name = "/accounts/qpp/aws-hhs-cms-amg-qpp-costscoring"
+# }
+#
+# data "aws_ssm_parameter" "aws-hhs-cms-amg-qpp-selfn" {
+#   name = "/accounts/qpp/aws-hhs-cms-amg-qpp-selfn"
+# }
+#
+# data "aws_ssm_parameter" "aws-hhs-cms-ccsq-qpp-navadevops" {
+#   name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-navadevops"
+# }
+#
+# data "aws_ssm_parameter" "aws-hhs-cms-ccsq-qpp-semanticbits" {
+#   name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-semanticbits"
+# }
+#
+# data "aws_ssm_parameter" "aws-hhs-cms-mip" {
+#   name = "/accounts/qpp/aws-hhs-cms-mip"
+# }

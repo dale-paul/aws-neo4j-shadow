@@ -2,6 +2,8 @@ from neo4j import GraphDatabase
 import os
 import dotenv
 import logging
+
+dotenv.find_dotenv(raise_error_if_not_found=True, usecwd=True)
 dotenv.load_dotenv()
 
 NEO4J_URI = os.environ['NEO4J_URI']

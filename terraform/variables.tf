@@ -24,6 +24,26 @@ variable "business" {
   default = "ccsq"
 }
 
+variable "container_version" {
+  default = "latest"
+}
+
+variable "dbms_security_auth_enabled" {
+  default = "false"
+}
+
+variable "aws_accounts" {
+  default = [
+    "aws-hhs-cms-ccsq-qpp-qppg",
+    "aws-hhs-cms-amg-qpp-cm",
+    "aws-hhs-cms-amg-qpp-costscoring",
+    "aws-hhs-cms-amg-qpp-selfn",
+    "aws-hhs-cms-ccsq-qpp-navadevops",
+    "aws-hhs-cms-ccsq-qpp-semanticbits",
+    "aws-hhs-cms-mip"
+  ]
+}
+
 locals {
   compute_type         = "BUILD_GENERAL1_SMALL"
   custom_compute_image = "codebuild-al2-impl:latest"

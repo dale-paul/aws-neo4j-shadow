@@ -10,40 +10,7 @@ resource "aws_ecs_task_definition" "neo4j" {
   execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
   cpu                      = 4096
   memory                   = 8192
-  container_definitions    = <<DEFINITION
-[
-  {
-    "portMappings": [
-      {
-        "hostPort": 7474,
-        "protocol": "tcp",
-        "containerPort": 7474
-      },
-      {
-        "hostPort": 7687,
-        "protocol": "tcp",
-        "containerPort": 7687
-      }
-    ],
-    "environment": [
-      {
-        "name": "NEO4J_dbms_security_auth__enabled",
-        "value": "false"
-      }
-    ],
-    "logConfiguration": {
-      "logDriver": "awslogs",
-      "options": {
-        "awslogs-group": "neo4j-services",
-        "awslogs-region": "us-east-1",
-        "awslogs-stream-prefix": "neo4j"
-      }
-    },
-    "image": "neo4j:latest",
-    "name": "neo4j"
-  }
-]
-DEFINITION
+  container_definitions    = data.template_file.neo4j_task_definition.rendered
 }
 
 resource "aws_lb_target_group" "neo4j_web_tg" {
@@ -57,14 +24,7 @@ resource "aws_lb_target_group" "neo4j_web_tg" {
     enabled = false
     type    = "lb_cookie"
   }
-
-  tags = merge(
-    local.default_tags,
-    map(
-      "Type", "private",
-      "layer", "App"
-    )
-  )
+  tags = local.default_tags
 }
 
 resource "aws_lb_target_group" "neo4j_bolt_tg" {
@@ -73,25 +33,12 @@ resource "aws_lb_target_group" "neo4j_bolt_tg" {
   protocol    = "TCP"
   vpc_id      = local.vpc_id
   target_type = "ip"
-  tags = merge(
-    local.default_tags,
-    map(
-      "Type", "private",
-      "layer", "App"
-    )
-  )
+  tags        = local.default_tags
 }
 
 resource "aws_cloudwatch_log_group" "neo4j-log-group" {
   name = "neo4j-services"
-
-  tags = merge(
-    local.default_tags,
-    map(
-      "Type", "private",
-      "layer", "App"
-    )
-  )
+  tags = local.default_tags
 }
 
 resource "aws_ecs_service" "neo4j_ecs_service" {
@@ -126,13 +73,7 @@ resource "aws_lb" "neo4j_nlb" {
   load_balancer_type         = "network"
   subnets                    = data.aws_subnet.app_group_subnets.*.id
   enable_deletion_protection = true
-  tags = merge(
-    local.default_tags,
-    map(
-      "Type", "private",
-      "layer", "App"
-    )
-  )
+  tags                       = local.default_tags
 }
 
 resource "aws_lb_listener" "https_listener" {
