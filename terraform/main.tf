@@ -187,7 +187,7 @@ resource "aws_cloudwatch_event_rule" "nightly_trigger" {
 
 resource "aws_cloudwatch_event_target" "codebuild" {
   rule      = aws_cloudwatch_event_rule.nightly_trigger.name
-  target_id = "TriggerCodeBuikd"
+  target_id = "TriggerCodeBuild"
   arn       = aws_codebuild_project.neo4j_build.arn
   role_arn  = aws_iam_role.build_event_trigger_role.arn
 }

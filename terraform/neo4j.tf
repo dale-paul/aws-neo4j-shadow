@@ -19,7 +19,6 @@ resource "aws_lb_target_group" "neo4j_web_tg" {
   protocol    = "TCP"
   vpc_id      = local.vpc_id
   target_type = "ip"
-  # slow_start  = 30
   stickiness {
     enabled = false
     type    = "lb_cookie"
