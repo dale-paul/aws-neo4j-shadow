@@ -16,7 +16,8 @@
         {
             "Effect": "Allow",
             "Resource": [
-                "arn:aws:s3:::codepipeline-${region}*"
+                "arn:aws:s3:::codepipeline-${region}*",
+                "arn:aws:s3:::${codebuild-artifacts-bucket}/*"
             ],
             "Action": [
                 "s3:PutObject",
@@ -29,10 +30,32 @@
         {
             "Action": [
               "events:*",
-              "iam:PassRole"
+              "iam:PassRole",
+              "ec2:CreateNetworkInterface",
+              "ec2:DescribeDhcpOptions",
+              "ec2:DescribeNetworkInterfaces",
+              "ec2:DeleteNetworkInterface",
+              "ec2:DescribeSubnets",
+              "ec2:DescribeSecurityGroups",
+              "ec2:DescribeVpcs"
             ],
             "Resource": "*",
             "Effect": "Allow"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateNetworkInterfacePermission"
+            ],
+            "Resource": "arn:aws:ec2:${region}:${account_id}:network-interface/*",
+            "Condition": {
+                "StringEquals": {
+                    "ec2:Subnet": [
+                        "arn:aws:ec2:${region}:${account_id}:subnet/${subnet}"
+                    ],
+                    "ec2:AuthorizedService": "codebuild.amazonaws.com"
+                }
+            }
         },
         {
             "Effect": "Allow",
@@ -44,6 +67,15 @@
             ],
             "Resource": [
                 "arn:aws:codebuild:${region}:${account_id}:report-group/neo4j-build*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action":[
+              "sts:AssumeRole"
+            ],
+            "Resource": [
+                "arn:aws:iam::${account_id}:role/neo4j-iam-audit-role"
             ]
         }
     ]

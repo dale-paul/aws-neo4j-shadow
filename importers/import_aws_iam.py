@@ -3,9 +3,7 @@
 # Author: D Paul - Flexion
 
 import sys,os
-# sys.path.append(os.getcwd())
 sys.path.append(os.path.join(os.getcwd(),'lib'))
-# sys.path.append(os.path.join(os.getcwd(),'neo4jhelpers'))
 
 import boto3
 import argparse
@@ -39,7 +37,7 @@ def get_user_credentials_report(acctObj:QPPAccount):
     logging.info(f"*** getting user credentials report for '{acctObj.alias}' ***")
 
     credentials = {}
-    # see if a credential report exists 
+    # see if a credential report exists
     while ( acctObj.api_call('iam','generate_credential_report')['State'] != 'COMPLETE'):
         pass
     aws_report = acctObj.api_call('iam','get_credential_report')
@@ -47,13 +45,13 @@ def get_user_credentials_report(acctObj:QPPAccount):
     reader = csv.DictReader(io.StringIO(content))
     for row in reader:
         datarow = dict(row) #result is OrderedDict so convert to dict
-        credentials[datarow['user']] = { 
-                    k : 'Never' if v in ('N/A',None) 
+        credentials[datarow['user']] = {
+                    k : 'Never' if v in ('N/A',None)
                         else (
-                            v if not isinstance(try_parse_datestr(v),(datetime.datetime)) 
-                                else 
+                            v if not isinstance(try_parse_datestr(v),(datetime.datetime))
+                                else
                                     epoch_str(_parser.isoparse(v))
-                        ) 
+                        )
                         for k,v in datarow.items() if k not in ('user','arn') #keys to skip
                 }
     return credentials
@@ -61,20 +59,20 @@ def get_user_credentials_report(acctObj:QPPAccount):
 # leaving out for now as there is no immediate use for this data and it is slow to run which would affect lambda execution
 def get_service_access_info(acctObj:QPPAccount, arn, retry = 0):
     """ Generate the IAM Access Report for an User, Group, Role, Policy """
-    # rsp = acctObj.api_call('iam','generate_service_last_accessed_details', Arn=arn)
-    # jobid = rsp['JobId']
-    # while True:
-    #     rsp = acctObj.api_call('iam','get_service_last_accessed_details',JobId=jobid,MaxItems=999)
-    #     if rsp['JobStatus'] in ('COMPLETED','FAILED'):
-    #         break
+    rsp = acctObj.api_call('iam','generate_service_last_accessed_details', Arn=arn)
+    jobid = rsp['JobId']
+    while time.sleep(.050) or True:
+        rsp = acctObj.api_call('iam','get_service_last_accessed_details',JobId=jobid,MaxItems=999)
+        if rsp['JobStatus'] in ('COMPLETED','FAILED'):
+            break
 
-    # if ( rsp['JobStatus'] == 'COMPLETED'):
-    #     return [ {'ServiceNamespace':k['ServiceNamespace'],
-    #                 'LastAuthenticated': epoch_str(k['LastAuthenticated']),
-    #                 'TotalAuthenticatedEntities': k['TotalAuthenticatedEntities']} 
-    #                 for k in rsp['ServicesLastAccessed'] if k['TotalAuthenticatedEntities'] > 0]
+    if ( rsp['JobStatus'] == 'COMPLETED'):
+        return [ {'ServiceNamespace':k['ServiceNamespace'],
+                    'LastAuthenticated': epoch_str(k['LastAuthenticated']),
+                    'TotalAuthenticatedEntities': k['TotalAuthenticatedEntities']}
+                    for k in rsp['ServicesLastAccessed'] if k['TotalAuthenticatedEntities'] > 0]
 
-    # logging.error(f"failed to retrieve service access info code: {rsp['Error']['Code']}, msg: {rsp['Error']['Message']}")
+    logging.error(f"failed to retrieve service access info code: {rsp['Error']['Code']}, msg: {rsp['Error']['Message']}")
     return []
 
 
@@ -154,7 +152,7 @@ def dump_policies(acctObj:QPPAccount):
         policy['Groups'] = [ i['GroupName'] for i in x['PolicyGroups'] ]
         policy['Users'] = [ i['UserName'] for i in x['PolicyUsers'] ]
         policy['Roles'] = [ i['RoleName'] for i in x['PolicyRoles'] ]
-        policy['LastServiceAccess'] = get_service_access_info(acctObj,arn)
+        policy['LastServiceAccess'] = []
         logging.info(f"\t{policy['Arn']}")
         policies.append(policy)
     return policies
@@ -196,7 +194,7 @@ def dump_groups(acctObj:QPPAccount):
         group['Name'] = f['GroupName']
         group['Arn'] = f['Arn']
         group['Id'] = f['GroupId']
-        group['LastServiceAccess'] = get_service_access_info(acctObj,f['Arn'])
+        group['LastServiceAccess'] = [] #get_service_access_info(acctObj,f['Arn'])
         groups.append(group)
     return groups
 
@@ -214,7 +212,7 @@ def dump_roles(acctObj:QPPAccount):
         role['Arn'] = f['Arn']
         role['Id'] = f['RoleId']
         role['Trust'] = f['AssumeRolePolicyDocument']['Statement'][0]['Principal']
-        role['LastServiceAccess'] = get_service_access_info(acctObj,f['Arn'])        
+        role['LastServiceAccess'] = get_service_access_info(acctObj,f['Arn'])
         roles.append(role)
     return roles
 
@@ -237,7 +235,7 @@ def dump_users(acctObj:QPPAccount):
         user['Groups'] = [g['GroupName'] for g in rsp2['Groups']]
         users.append(user)
     return users
-    
+
 
 def do_rollups(report):
     """ Rollup data to allow easy cross reference for data in policies list """
@@ -318,5 +316,5 @@ def generate_iam_report(args:dict):
     # do our rollups after all the thread work to avoid race conditions
     for a in accounts['Accounts']:
         do_rollups(a)
-    
+
     return accounts

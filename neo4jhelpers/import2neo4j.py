@@ -6,9 +6,11 @@ GROUPLABEL = "IAM:GROUP"
 ROLELABEL = "IAM:ROLE"
 POLICYLABEL = "IAM:POLICY"
 ILPOLICYLABEL = "IAM:INLINE_POLICY"
+SERVICELABEL ="IAM:SERVICE"
 HASMEMBERLABEL = "HAS_MEMBER"
 HASPOLICYLABEL = "HAS_POLICY"
 HASILPOLICYLABEL = "HAS_INLINE_POLICY"
+SERVICEACCESSLABEL = "ACCESSED_BY"
 
 def parse_epic_string(str):
     m = re.match(r'[^0-9-]*(?P<days>-?\d+)',str)
@@ -176,6 +178,68 @@ def dump_user_inline_policies(neo4j,acct):
     # then add the relationship
     neo4j.write_relations(tuples)
 
+def dump_group_access(neo4j,acct):
+    tuples = [ 
+        (
+            { 'label': SERVICELABEL, 'properties': {'name':u['ServiceNamespace'],'account':acct['Account']} },
+            { 'label': SERVICEACCESSLABEL, 'properties': {'last_access_days':parse_epic_string(u['LastAuthenticated'])} }, 
+            { 'label': GROUPLABEL, 'properties': {'name': g['Name'],'account':acct['Account']} } 
+        ) 
+        for g in acct['Groups'] for u in g['LastServiceAccess'] 
+    ]
+     # first create the service node
+    neo4j.write_nodes([n[0] for n in tuples])
+    # then add the relationship
+    neo4j.write_relations(tuples)
+
+def dump_role_access(neo4j,acct):
+    tuples = [ 
+        (
+            { 'label': SERVICELABEL, 'properties': {'name':u['ServiceNamespace'],'account':acct['Account']} },
+            { 'label': SERVICEACCESSLABEL, 'properties': {'last_access_days':parse_epic_string(u['LastAuthenticated'])} }, 
+            { 'label': ROLELABEL, 'properties': {'name': g['Name'],'account':acct['Account']} } 
+        ) 
+        for g in acct['Roles'] for u in g['LastServiceAccess'] 
+    ]
+     # first create the service node
+    neo4j.write_nodes([n[0] for n in tuples])
+    # then add the relationship
+    neo4j.write_relations(tuples)
+
+def dump_user_access(neo4j,acct):
+    tuples = [ 
+        (
+            { 'label': SERVICELABEL, 'properties': {'name':u['ServiceNamespace'],'account':acct['Account']} },
+            { 'label': SERVICEACCESSLABEL, 'properties': {'last_access_days':parse_epic_string(u['LastAuthenticated'])} }, 
+            { 'label': USERLABEL, 'properties': {'name': g['Name'],'account':acct['Account']} } 
+        ) 
+        for g in acct['Users'] for u in g['LastServiceAccess'] 
+    ]
+     # first create the service node
+    neo4j.write_nodes([n[0] for n in tuples])
+    # then add the relationship
+    neo4j.write_relations(tuples)
+
+def dump_policy_access(neo4j,acct):
+    tuples = [ 
+        (
+            { 'label': SERVICELABEL, 'properties': {'name':u['ServiceNamespace'],'account':acct['Account']} },
+            { 'label': SERVICEACCESSLABEL, 'properties': {'last_access_days':parse_epic_string(u['LastAuthenticated'])} }, 
+            { 'label': POLICYLABEL, 'properties': {'name': g['Name'],'account':acct['Account']} } 
+        ) 
+        for g in acct['Policies'] for u in g['LastServiceAccess'] 
+    ]
+     # first create the service node
+    neo4j.write_nodes([n[0] for n in tuples])
+    # then add the relationship
+    neo4j.write_relations(tuples)
+
+def dump_service_access(neo4j,acct):
+    dump_group_access(neo4j,acct)
+    dump_role_access(neo4j,acct)
+    dump_user_access(neo4j,acct)
+    dump_policy_access(neo4j,acct)
+
 def import_to_neo4j(data):
     if 'Accounts' not in data.keys():
         raise KeyError("Incorrect import data format")
@@ -193,10 +257,13 @@ def import_to_neo4j(data):
             dump_group_inline_policies(neo4j,acct)
             dump_role_inline_policies(neo4j,acct)
             dump_user_inline_policies(neo4j,acct)
+            dump_service_access(neo4j,acct)
 
 #===================================
 if __name__ == '__main__':
     import json
+    import os
+    os.environ['NEO4J_URI'] = 'bolt://localhost:7687'
     with open('test-scripts/QPPFC-1685.json') as f:
         data = json.load(f)
 

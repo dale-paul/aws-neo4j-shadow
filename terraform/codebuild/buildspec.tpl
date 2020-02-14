@@ -1,8 +1,7 @@
 version: 0.2
 env:
   variables:
-    DJANGO_REPO_NAME: "defectdojo-django"
-    NGINX_REPO_NAME: "defectdojo-nginx"
+    AUDIT_RESULTS: "audit-results.json"
 phases:
   install:
     runtime-versions:
@@ -12,8 +11,16 @@ phases:
       - echo Logging in to Amazon ECR...
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
       - pip install -r requirements.txt
+      - printenv > .env
   build:
     commands:
-      - echo Build reports `date`
-    commands:
-      - echo `date`
+      - echo Build reports
+      - ./IAMPolicy-audit.py
+          --role-name neo4j-iam-audit-role
+          --log-level WARNING
+          --max-threads 8
+          --neo4j
+          -o $AUDIT_RESULTS
+artifacts:
+  files:
+    - $AUDIT_RESULTS
