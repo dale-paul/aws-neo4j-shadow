@@ -16,6 +16,10 @@
       {
         "name": "NEO4J_dbms_security_auth__enabled",
         "value": "${auth_enabled}"
+      },
+      {
+        "name": "NEO4J_dbms_connector_bolt_advertised__address",
+        "value": "${bolt_advertised_address}:${bolt_port}"
       }
     ],
     "logConfiguration": {
