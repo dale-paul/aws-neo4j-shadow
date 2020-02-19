@@ -144,7 +144,7 @@ resource "aws_codebuild_project" "neo4j_build" {
     insecure_ssl        = false
     buildspec           = data.template_file.neo4j-buildspec.rendered
   }
-  source_version = "v1.0.0"
+  source_version = "v1.0.1"
 
   environment {
     compute_type                = local.compute_type
