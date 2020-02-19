@@ -31,3 +31,9 @@ match(n:SERVICE)
 with n.account as account, collect(n.name) as services  order by services, account 
 return account, services;
 
+// Admin and PowerUsers
+match(p:POLICY {account:"<account#>"}) WHERE p.name in ["AdministratorAccess","PowerUserAccess"]
+optional match(g:GROUP)-[:HAS_POLICY]->(p2) WHERE (p2=p)
+optional match(r:ROLE)-[:HAS_POLICY]->(p3) WHERE (p3=p)
+optional match(u:USER {account:"<account#>",console_access:'true'})
+return g,p,r,u
