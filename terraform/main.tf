@@ -144,7 +144,8 @@ resource "aws_codebuild_project" "neo4j_build" {
     insecure_ssl        = false
     buildspec           = data.template_file.neo4j-buildspec.rendered
   }
-
+  source_version = "master"
+  
   environment {
     compute_type                = local.compute_type
     image                       = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${local.region}.amazonaws.com/${local.custom_compute_image}"
