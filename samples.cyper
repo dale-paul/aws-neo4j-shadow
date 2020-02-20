@@ -27,9 +27,23 @@ with account, collect(name) as names
 return account, names;
 
 //Services used
-match(n:SERVICE) 
-with n.account as account, collect(n.name) as services  order by services, account 
-return account, services;
+match(n:SERVICE)-[r:ACCESSED_BY]-(u:USER)
+where r.last_access_days < 90
+with n.account as account, n.name as service order by account,service
+return account, collect(distinct service) as services;
+
+// Services by User access
+MATCH(s:SERVICE)-[r:ACCESSED_BY]-(u:USER) 
+WHERE r.last_access_days < 90
+WITH s.account as Account, s.name as Service, u.name as User
+ORDER BY Account, Service, User
+return Account, Service, collect(User) as Users;
+
+// User by Services access
+MATCH(s:SERVICE)-[r:ACCESSED_BY]-(u:USER) 
+WHERE r.last_access_days < 90
+with s.account as Account, u.name as User, s.name as Service order by Account,User,Service
+return Account, User, collect(Service) as Services;
 
 // Admin and PowerUsers
 match(p:POLICY {account:"<account#>"}) WHERE p.name in ["AdministratorAccess","PowerUserAccess"]
