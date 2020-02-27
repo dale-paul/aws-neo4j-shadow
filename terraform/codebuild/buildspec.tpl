@@ -10,6 +10,7 @@ phases:
     commands:
       - echo Logging in to Amazon ECR...
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+      - yum install -y python-devel openldap-devel
       - pip install -r requirements.txt
       - printenv > .env
   build:

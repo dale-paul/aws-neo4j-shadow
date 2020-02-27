@@ -19,6 +19,7 @@
                 "--log-level","INFO",
                 "--max-threads", "8",
                 "--neo4j",
+                "--no-access-advisor",
                 "-o","test-scripts/QPPFC-1685.json"
            ]
         }

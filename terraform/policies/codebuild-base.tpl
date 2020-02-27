@@ -77,6 +77,17 @@
             "Resource": [
                 "arn:aws:iam::${account_id}:role/neo4j-iam-audit-role"
             ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ssm:DescribeParameters",
+                "ssm:GetParametersByPath"
+            ],
+            "Resource": [
+                "arn:aws:ssm:*:${account_id}:parameter/ldap/prod/*",
+                "arn:aws:ssm:*:${account_id}:parameter/accounts/qpp/*"
+            ]
         }
     ]
 }

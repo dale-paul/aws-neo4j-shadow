@@ -51,3 +51,14 @@ optional match(g:GROUP)-[:HAS_POLICY]->(p2) WHERE (p2=p)
 optional match(r:ROLE)-[:HAS_POLICY]->(p3) WHERE (p3=p)
 optional match(u:USER {account:"<account#>",console_access:'true'})
 return g,p,r,u
+
+// aws access with no CMS EUA
+match(u:USER) 
+where size(u.name) = 4 and u.email = '' and (u.console_access = 'true' or u.api_access = 'true')
+return u.account, u.name, u.fullname, u.email, u.phone, u.console_access, u.api_access
+
+// EUA
+match(u:USER) 
+where size(u.name) = 4 and (u.console_access = 'true' or u.api_access = 'true') //and u.email = ''
+with u.name as EUA, u.fullname as Name, u.email as Email, u.phone as Phone, collect(u.account) as Accounts order by EUA
+return EUA, Name, Email, Phone, Accounts

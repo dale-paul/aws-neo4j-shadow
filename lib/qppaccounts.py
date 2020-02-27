@@ -127,18 +127,10 @@ class QPPAccounts:
     """
     QPPAccounts collection class used to encapsulate QPPAccount objects for all the FC managed accounts
     """
-    _QPPAwsAccounts = [ 
-        {'alias':'aws-hhs-cms-mip','accountNum':'968524040713'},
-        {'alias':'aws-hhs-cms-ccsq-qpp-semanticbits','accountNum':'375727523534'},
-        {'alias':'aws-hhs-cms-ccsq-qpp-navadevops','accountNum':'003384571330'},
-        {'alias':'aws-hhs-cms-amg-qpp-costscoring','accountNum':'112637689005'},
-        {'alias':'aws-hhs-cms-ccsq-qpp-qppg','accountNum':'941681414890'},
-        {'alias':'aws-hhs-cms-amg-qpp-cm','accountNum':'427702624714'},
-        {'alias':'aws-hhs-cms-amg-qpp-selfn','accountNum':'513715589246'},
-        {'alias':'aws-hhs-cms-amg-qpp-secops','accountNum':'863249929524'}
-        ]
+    _QPPAwsAccounts = []
     def __init__(self):
         self.iterobj = iter(self._QPPAwsAccounts)
+        self._getSSMParams()
         
     def __iter__(self):
         return self
@@ -146,6 +138,18 @@ class QPPAccounts:
     def __next__(self):
         n = next(self.iterobj)
         return QPPAccount(n['accountNum'],n['alias'])  
+
+    def _getSSMParams(self):
+        """ AWS SSM Parameter Store for account aliases and numbers """
+        ssm_base_path = '/accounts/qpp/'
+        ssm = boto3.Session().client('ssm')
+        ssmparams = ssm.get_parameters_by_path(Path=ssm_base_path,WithDecryption=True)
+        for item in ssmparams['Parameters']:
+            t = {
+                'alias': item['Name'].split('/')[-1],
+                'accountNum': item['Value']
+            }
+            self._QPPAwsAccounts.append(t)
 
     @staticmethod
     def get_account_by_alias(alias):

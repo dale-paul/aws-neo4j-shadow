@@ -17,7 +17,9 @@ import concurrent.futures
 import jmespath
 from dateutil import parser as _parser
 from botocore.exceptions import ClientError
-from qppaccounts import QPPAccounts, QPPAccount
+from lib import QPPAccounts, QPPAccount, EUALookup
+
+_no_access_advisor = False
 
 def epoch_str(d1):
     """ return a "days ago" type string for any date relative to today """
@@ -56,23 +58,23 @@ def get_user_credentials_report(acctObj:QPPAccount):
                 }
     return credentials
 
-# leaving out for now as there is no immediate use for this data and it is slow to run which would affect lambda execution
 def get_service_access_info(acctObj:QPPAccount, arn, retry = 0):
     """ Generate the IAM Access Report for an User, Group, Role, Policy """
-    rsp = acctObj.api_call('iam','generate_service_last_accessed_details', Arn=arn)
-    jobid = rsp['JobId']
-    while time.sleep(.050) or True:
-        rsp = acctObj.api_call('iam','get_service_last_accessed_details',JobId=jobid,MaxItems=999)
-        if rsp['JobStatus'] in ('COMPLETED','FAILED'):
-            break
+    if not _no_access_advisor:
+        rsp = acctObj.api_call('iam','generate_service_last_accessed_details', Arn=arn)
+        jobid = rsp['JobId']
+        while time.sleep(.050) or True:
+            rsp = acctObj.api_call('iam','get_service_last_accessed_details',JobId=jobid,MaxItems=999)
+            if rsp['JobStatus'] in ('COMPLETED','FAILED'):
+                break
 
-    if ( rsp['JobStatus'] == 'COMPLETED'):
-        return [ {'ServiceNamespace':k['ServiceNamespace'],
-                    'LastAuthenticated': epoch_str(k['LastAuthenticated']),
-                    'TotalAuthenticatedEntities': k['TotalAuthenticatedEntities']}
-                    for k in rsp['ServicesLastAccessed'] if k['TotalAuthenticatedEntities'] > 0]
+        if ( rsp['JobStatus'] == 'COMPLETED'):
+            return [ {'ServiceNamespace':k['ServiceNamespace'],
+                        'LastAuthenticated': epoch_str(k['LastAuthenticated']),
+                        'TotalAuthenticatedEntities': k['TotalAuthenticatedEntities']}
+                        for k in rsp['ServicesLastAccessed'] if k['TotalAuthenticatedEntities'] > 0]
 
-    logging.error(f"failed to retrieve service access info code: {rsp['Error']['Code']}, msg: {rsp['Error']['Message']}")
+        logging.error(f"failed to retrieve service access info code: {rsp['Error']['Code']}, msg: {rsp['Error']['Message']}")
     return []
 
 
@@ -223,17 +225,23 @@ def dump_users(acctObj:QPPAccount):
     credentials = get_user_credentials_report(acctObj)
     logging.info(f"\tdumping users for '{acctObj.alias}'")
     rsp = acctObj.api_call('iam','list_users',MaxItems=999)
-    for f in rsp['Users']:
-        logging.info(f"\tuser: {f['UserName']}")
-        user = {}
-        user['Name'] = f['UserName']
-        user['Arn'] = f['Arn']
-        user['Id'] = f['UserId']
-        user['CredentialInfo'] = credentials.get(f['UserName'],None)
-        user['LastServiceAccess'] = get_service_access_info(acctObj,f['Arn'])
-        rsp2 = acctObj.api_call('iam','list_groups_for_user',UserName=user['Name'])
-        user['Groups'] = [g['GroupName'] for g in rsp2['Groups']]
-        users.append(user)
+    with EUALookup() as eua:
+        eua.logger = logging
+        for f in rsp['Users']:
+            logging.info(f"\tuser: {f['UserName']}")
+            user = {}
+            user['Name'] = f['UserName']
+            user['Arn'] = f['Arn']
+            user['Id'] = f['UserId']
+            user['CredentialInfo'] = credentials.get(f['UserName'],None)
+            user['LastServiceAccess'] = get_service_access_info(acctObj,f['Arn'])
+            rsp2 = acctObj.api_call('iam','list_groups_for_user',UserName=user['Name'])
+            user['Groups'] = [g['GroupName'] for g in rsp2['Groups']]
+            euadata = eua.lookupEUA(user['Name'])
+            user['Fullname'] = euadata['cn']
+            user['Email'] = euadata['mail'] 
+            user['Phone'] = euadata['telephoneNumber'] 
+            users.append(user)
     return users
 
 
@@ -280,6 +288,8 @@ def build_account_report(acctObj:QPPAccount):
 
 def generate_iam_report(args:dict):
     logging.basicConfig(format='%(levelname)s: %(message)s', level=args['log_level'])
+    global _no_access_advisor 
+    _no_access_advisor = args['no_access_advisor']
 
     """ The main process """
     qppaccounts = []

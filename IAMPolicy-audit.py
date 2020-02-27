@@ -18,6 +18,7 @@ parser.add_argument("--aws-profile", help="AWS Profile to use for credentials")
 parser.add_argument("--log-level", choices=['CRITICAL','ERROR','WARNING','INFO','DEBUG'],default='WARNING',help="Set the logging level")
 parser.add_argument("--max-threads", default="3", type=int, help="Maximum threads for account execution. Default = 3. More can cause throttling errors")
 parser.add_argument("--neo4j", action='store_true', help="put output to neo4j server")
+parser.add_argument("--no-access-advisor",action='store_true', help="do not query access advisor (will speed up run)")
 
 
 if __name__ == "__main__":
