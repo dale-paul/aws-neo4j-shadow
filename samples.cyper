@@ -62,3 +62,10 @@ match(u:USER)
 where size(u.name) = 4 and (u.console_access = 'true' or u.api_access = 'true') //and u.email = ''
 with u.name as EUA, u.fullname as Name, u.email as Email, u.phone as Phone, collect(u.account) as Accounts order by EUA
 return EUA, Name, Email, Phone, Accounts
+
+// User Access Advisor
+MATCH(s:SERVICE)-[r:ACCESSED_BY]-(u:USER) 
+where (u.console_access = 'true' or u.api_access = 'true')
+//WHERE r.last_access_days < 90
+with s.account as Account, u.name as User, u.fullname as FullName, s.name as Service, r.last_access_days as RecentAccess order by User,Account,RecentAccess,Service
+return Account, User,FullName, RecentAccess, collect(Service) as Services;
