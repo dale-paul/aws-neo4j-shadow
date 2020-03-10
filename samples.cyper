@@ -20,7 +20,7 @@ return account, names;
 
 // access keys to non-console users that have not been used in 180 days
 match(n:USER {api_access:'true'}) 
-where coalesce(n.accesskey_last_used_days,999) > 180
+where coalesce(n.accesskey_last_used_days,n.accesskey_last_rotated_days) > 180
 with n.account as account, n.name as name
 order by account, name
 with account, collect(name) as names
@@ -55,7 +55,7 @@ return g,p,r,u
 // aws access with no CMS EUA
 match(u:USER) 
 where size(u.name) = 4 and u.email = '' and (u.console_access = 'true' or u.api_access = 'true')
-return u.account, u.name, u.fullname, u.email, u.phone, u.console_access, u.api_access
+return u.name, collect(u.account) as Accounts
 
 // EUA
 match(u:USER) 
