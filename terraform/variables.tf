@@ -40,7 +40,9 @@ variable "aws_accounts" {
     "aws-hhs-cms-amg-qpp-selfn",
     "aws-hhs-cms-ccsq-qpp-navadevops",
     "aws-hhs-cms-ccsq-qpp-semanticbits",
-    "aws-hhs-cms-mip"
+    "aws-hhs-cms-mip",
+    "aws-hhs-cms-amg-qpp-targetreview",
+    "aws-hhs-cms-amg-qpp-fhir"
   ]
 }
 
@@ -55,4 +57,5 @@ locals {
   neo4j_uri            = "neo4j.qpp.internal"
   neo4j_web_port       = 7474
   neo4j_bolt_port      = 7687
+  source_version       = "v1.0.2"
 }

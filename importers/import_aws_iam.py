@@ -239,8 +239,8 @@ def dump_users(acctObj:QPPAccount):
             user['Groups'] = [g['GroupName'] for g in rsp2['Groups']]
             euadata = eua.lookupEUA(user['Name'])
             user['Fullname'] = euadata['cn']
-            user['Email'] = euadata['mail'] 
-            user['Phone'] = euadata['telephoneNumber'] 
+            user['Email'] = euadata['mail']
+            user['Phone'] = euadata['telephoneNumber']
             users.append(user)
     return users
 
@@ -288,7 +288,7 @@ def build_account_report(acctObj:QPPAccount):
 
 def generate_iam_report(args:dict):
     logging.basicConfig(format='%(levelname)s: %(message)s', level=args['log_level'])
-    global _no_access_advisor 
+    global _no_access_advisor
     _no_access_advisor = args['no_access_advisor']
 
     """ The main process """

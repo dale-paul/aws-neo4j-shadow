@@ -36,4 +36,3 @@ if __name__ == "__main__":
         args.output.write(outstr)
     else:
         print(outstr)
-
