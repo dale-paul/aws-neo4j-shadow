@@ -49,6 +49,23 @@ data "template_file" "neo4j-buildspec" {
   template = file("codebuild/buildspec.tpl")
 }
 
+data "aws_iam_policy_document" "ecs_task_execution" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "template_file" "ecs_task_execution_policy" {
+  template = file("policies/ecs-task-execution.tpl")
+}
+
 #CodeBuild role and policies
 data "aws_iam_policy_document" "codebuild-assume-role-policy" {
   statement {
