@@ -6,8 +6,8 @@ resource "aws_ecs_task_definition" "neo4j" {
   family                   = "neo4j-task"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  task_role_arn            = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
-  execution_role_arn       = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
+  task_role_arn            = aws_iam_role.ecs_task_execution_role.arn #"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn #"arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/ecsTaskExecutionRole"
   cpu                      = 4096
   memory                   = 8192
   container_definitions    = data.template_file.neo4j_task_definition.rendered
@@ -75,7 +75,18 @@ resource "aws_lb" "neo4j_nlb" {
   tags                       = local.default_tags
 }
 
-resource "aws_lb_listener" "https_listener" {
+resource "aws_lb_listener" "http_listener_on_80" {
+  load_balancer_arn = aws_lb.neo4j_nlb.arn
+  port              = 80
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.neo4j_web_tg.arn
+  }
+}
+
+resource "aws_lb_listener" "http_listener_on_7474" {
   load_balancer_arn = aws_lb.neo4j_nlb.arn
   port              = local.neo4j_web_port
   protocol          = "TCP"

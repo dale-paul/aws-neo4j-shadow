@@ -41,6 +41,16 @@ resource "aws_security_group" "neo4j_sec_gp" {
   }
 
   ingress {
+    from_port = 80
+    to_port   = 80
+    protocol  = "tcp"
+
+    cidr_blocks = [
+      "10.0.0.0/8",
+    ]
+  }
+
+  ingress {
     from_port = local.neo4j_bolt_port
     to_port   = local.neo4j_bolt_port
     protocol  = "tcp"
@@ -73,6 +83,11 @@ resource "aws_iam_role" "build_event_trigger_role" {
   assume_role_policy = data.aws_iam_policy_document.events-assume-role-policy.json
 }
 
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name               = "ecsTaskExecutionRole-neo4j"
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_execution.json
+}
+
 resource "aws_iam_role_policy" "codebuild_base_policy" {
   name   = "CodeBuildBasePolicy-neo4j-${local.region}"
   policy = data.template_file.codebuild_base_policy.rendered
@@ -89,6 +104,12 @@ resource "aws_iam_role_policy" "codebuild_crossaccount_policy" {
   name   = "neo4j-assume-role-inline-policy"
   policy = data.aws_iam_policy_document.codebuild_crossaccount_policy.json
   role   = aws_iam_role.codebuild_neo4j_role.id
+}
+
+resource "aws_iam_role_policy" "ecs_task_execution_policy" {
+  name   = "ecsTaskExecutionRole-neo4j-policy"
+  policy = data.template_file.ecs_task_execution_policy.rendered
+  role   = aws_iam_role.ecs_task_execution_role.id
 }
 
 resource "aws_kms_key" "neo4j-kms-key" {
@@ -125,7 +146,7 @@ resource "aws_s3_bucket_public_access_block" "bucket" {
 
 resource "aws_codebuild_project" "neo4j_build" {
   name           = var.project
-  build_timeout  = 30
+  build_timeout  = 60
   badge_enabled  = true
   service_role   = aws_iam_role.codebuild_neo4j_role.arn
   source_version = local.source_version
