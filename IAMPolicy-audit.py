@@ -25,7 +25,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print("This program will take several minutes to run....")
     logging.basicConfig(format='%(levelname)s: %(message)s', level=args.log_level)
-    logging.info(vars(args))
     report = generate_iam_report(vars(args)) # pass our args on as a dictionary
 
     if args.neo4j:

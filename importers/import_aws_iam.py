@@ -312,10 +312,10 @@ def generate_iam_report(args:dict):
     threads = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=args['max_threads']) as executor:
         for acct in qppaccounts:
-            if ( args['role-name'] ):
-                acct.requested_role = args['role-name'] #load the credentials
-            elif args['aws-profile']:
-                acct.profile = args['aws-profile']
+            if ( args['role_name'] ):
+                acct.requested_role = args['role_name'] #load the credentials
+            elif args['aws_profile']:
+                acct.profile = args['aws_profile']
             acct.logger = logging
             threads.append( executor.submit(build_account_report,acct) )
 
