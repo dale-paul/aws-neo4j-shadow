@@ -239,8 +239,8 @@ def dump_users(acctObj:QPPAccount):
             user['Groups'] = [g['GroupName'] for g in rsp2['Groups']]
             euadata = eua.lookupEUA(user['Name'])
             user['Fullname'] = euadata['cn']
-            user['Email'] = euadata['mail'] 
-            user['Phone'] = euadata['telephoneNumber'] 
+            user['Email'] = euadata['mail']
+            user['Phone'] = euadata['telephoneNumber']
             users.append(user)
     return users
 
@@ -288,7 +288,7 @@ def build_account_report(acctObj:QPPAccount):
 
 def generate_iam_report(args:dict):
     logging.basicConfig(format='%(levelname)s: %(message)s', level=args['log_level'])
-    global _no_access_advisor 
+    global _no_access_advisor
     _no_access_advisor = args['no_access_advisor']
 
     """ The main process """
@@ -312,10 +312,10 @@ def generate_iam_report(args:dict):
     threads = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=args['max_threads']) as executor:
         for acct in qppaccounts:
-            if ( args['role_name'] ):
-                acct.requested_role = args['role_name'] #load the credentials
-            elif args['aws_profile']:
-                acct.profile = args['aws_profile']
+            if ( args['role-name'] ):
+                acct.requested_role = args['role-name'] #load the credentials
+            elif args['aws-profile']:
+                acct.profile = args['aws-profile']
             acct.logger = logging
             threads.append( executor.submit(build_account_report,acct) )
 

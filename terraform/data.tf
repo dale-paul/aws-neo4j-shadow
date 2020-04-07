@@ -102,11 +102,11 @@ data "template_file" "codebuild_trigger_policy" {
 data "template_file" "neo4j_task_definition" {
   template = file("fargate/neo4j_task.tpl")
   vars = {
-    region            = local.region
-    http_port         = local.neo4j_web_port
-    bolt_port         = local.neo4j_bolt_port
-    container_version = var.container_version
-    auth_enabled      = var.dbms_security_auth_enabled
+    region                  = local.region
+    http_port               = local.neo4j_web_port
+    bolt_port               = local.neo4j_bolt_port
+    container_version       = var.container_version
+    auth_enabled            = var.dbms_security_auth_enabled
     bolt_advertised_address = local.neo4j_uri
   }
 }
