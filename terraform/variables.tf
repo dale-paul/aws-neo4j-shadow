@@ -51,7 +51,7 @@ locals {
   custom_compute_image = "codebuild-al2-impl:latest"
   region               = "us-east-1"
   bucket-name          = "neo4j-build-output"
-  cron_expression      = "cron(0 5 ? * MON-FRI *)"
+  cron_expression      = "cron(0 23 ? * MON-FRI *)"
   app_subnet_filter    = ["*app"]
   vpc_id               = "vpc-05a676a9f7913930d"
   neo4j_uri            = "neo4j.qpp.internal"

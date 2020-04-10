@@ -202,7 +202,7 @@ resource "aws_codebuild_project" "neo4j_build" {
 
 resource "aws_cloudwatch_event_rule" "nightly_trigger" {
   name                = "${var.project}-codebuild-trigger"
-  description         = "Schedule daily build of the ${var.project} codebuild project at 00:00 EST"
+  description         = "Schedule daily build of the ${var.project} codebuild project at 19:00 EST"
   schedule_expression = local.cron_expression
   tags                = local.default_tags
 }
