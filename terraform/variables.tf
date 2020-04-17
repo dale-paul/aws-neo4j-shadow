@@ -46,12 +46,21 @@ variable "aws_accounts" {
   ]
 }
 
+variable "scheduled_events" {
+  description = "CloudWatch scheduled events"
+  type        = map
+  default = {
+    SHUTDOWN = "cron(30 23 ? * MON-FRI *)",
+    WAKEUP   = "cron(45 11 ? * MON-FRI *)"
+  }
+}
+
 locals {
   compute_type         = "BUILD_GENERAL1_SMALL"
   custom_compute_image = "codebuild-al2-impl:latest"
   region               = "us-east-1"
   bucket-name          = "neo4j-build-output"
-  cron_expression      = "cron(0 5 ? * MON-FRI *)"
+  cron_expression      = "cron(45 11 ? * MON-FRI *)"
   app_subnet_filter    = ["*app"]
   vpc_id               = "vpc-05a676a9f7913930d"
   neo4j_uri            = "neo4j.qpp.internal"
@@ -59,3 +68,4 @@ locals {
   neo4j_bolt_port      = 7687
   source_version       = "v1.0.2"
 }
+
