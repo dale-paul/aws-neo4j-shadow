@@ -17,7 +17,7 @@ def set_desirecount():
 def lambda_handler(event, context):
     try:
         session = boto3.Session()
-        client = boto3.client('application-autoscaling')
+        client = session.client('application-autoscaling')
         capacity = set_desirecount()
         response = client.register_scalable_target(
             ServiceNamespace = 'ecs',
