@@ -11,7 +11,7 @@ def set_desirecount():
     desiredCount = 0
     period = strftime("%p", gmtime())
     if period == 'AM':
-        desiredCount = 0
+        desiredCount = 1
     return desiredCount
 
 def lambda_handler(event, context):
@@ -28,6 +28,7 @@ def lambda_handler(event, context):
         )
         LOGGER.info(response)
         output = "Successfully set desired count to {}".format(capacity)
+        LOGGER.info(output)
         return {
             'statusCode': 200,
             'body': json.dumps(output)

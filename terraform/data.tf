@@ -151,3 +151,27 @@ data "aws_route53_zone" "qpp_hosted_zone" {
 data "aws_ssm_parameter" "qppg_account" {
   name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-qppg"
 }
+
+data "aws_iam_policy_document" "cost_saving_lambda_iam_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogStream",
+      "application-autoscaling:RegisterScalableTarget",
+      "logs:PutLogEvents",
+      "logs:CreateLogGroup"
+    ]
+    resources = ["*"]
+  }
+}
+
+data "aws_iam_policy_document" "cost_saving_lambda_iam_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
