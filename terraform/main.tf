@@ -6,7 +6,7 @@ provider "aws" {
   alias  = "qppg"
   region = local.region
   assume_role {
-    role_arn = "arn:aws:iam::${data.aws_ssm_parameter.qppg_account.value}:role/QPPMGMTRole"
+    role_arn = "arn:aws:iam::${data.aws_ssm_parameter.qppg_account.value}:role/tf-devops-role"
   }
 }
 
