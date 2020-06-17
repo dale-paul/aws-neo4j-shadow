@@ -41,8 +41,7 @@ variable "aws_accounts" {
     "aws-hhs-cms-ccsq-qpp-navadevops",
     "aws-hhs-cms-ccsq-qpp-semanticbits",
     "aws-hhs-cms-mip",
-    "aws-hhs-cms-amg-qpp-targetreview",
-    "aws-hhs-cms-amg-qpp-fhir"
+    "aws-hhs-cms-amg-qpp-targetreview"
   ]
 }
 

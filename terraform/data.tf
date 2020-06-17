@@ -49,6 +49,10 @@ data "template_file" "neo4j-buildspec" {
   template = file("codebuild/buildspec.tpl")
 }
 
+data "template_file" "neo4j-image-buildspec" {
+  template = file("codebuild/buildspec-image.tpl")
+}
+
 data "aws_iam_policy_document" "ecs_task_execution" {
   statement {
     effect = "Allow"
