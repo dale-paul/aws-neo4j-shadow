@@ -126,7 +126,7 @@ data "template_file" "neo4j_task_definition" {
     region                  = local.region
     http_port               = local.neo4j_web_port
     bolt_port               = local.neo4j_bolt_port
-    container_version       = var.container_version
+    image                   = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${local.region}.amazonaws.com/neo4j:${var.container_version}"
     auth_enabled            = var.dbms_security_auth_enabled
     bolt_advertised_address = local.neo4j_uri
   }
