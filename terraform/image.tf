@@ -59,6 +59,25 @@ module "neo4j-image-codebuild" {
   ssm_param_list      = values(aws_ssm_parameter.ne4oj_image_digest).*.name
 }
 
+resource "aws_cloudwatch_event_rule" "daily_trigger" {
+  name                = "${local.project_name}-codebuild-trigger"
+  description         = "Schedule daily build of the ${local.project_name} codebuild project at 19:00 EST"
+  schedule_expression = local.cron_expression
+  tags                = local.default_tags
+}
+
+resource "aws_cloudwatch_event_target" "event_target" {
+  rule     = aws_cloudwatch_event_rule.daily_trigger.name
+  arn      = module.neo4j-image-codebuild.codebuild-project-arn
+  role_arn = aws_iam_role.build_event_trigger_role.arn
+}
+
+resource "aws_cloudwatch_event_target" "codebuild_neo4j_image" {
+  rule     = aws_cloudwatch_event_rule.daily_trigger.name
+  arn      = module.neo4j-image-codebuild.codebuild-project-arn
+  role_arn = aws_iam_role.build_event_trigger_role.arn
+}
+
 output "codebuild_project_name" {
   value = module.neo4j-image-codebuild.codebuild-project-name
 }

@@ -16,15 +16,12 @@ phases:
   build:
     commands:
       - echo Get the Neo4j image from the Docker registry
-      - docker pull neo4j:latest
-      - echo get the image digest
-      - LATEST_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' neo4j:latest)
-      - CURRENT_DIGEST=$(aws ssm get-parameter --name '/neo4j/production/image-digest' --query Parameter.Value)
+      - LATEST_DIGEST=$(wget -q https://registry.hub.docker.com/v2/repositories/library/neo4j/tags/latest -O - | jq -r '.images[].digest')
+      - CURRENT_DIGEST=$(aws ssm get-parameter --name '/neo4j/production/image-digest' | jq -r '.Parameter.Value')
       - |
           if [ "$LATEST_DIGEST" != "$CURRENT_DIGEST" ]; then
+            docker pull $REPO_NAME:latest
+            docker tag $REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME:latest
+            docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME:latest
             aws ssm put-parameter --name "/neo4j/production/image-digest" --value "$LATEST_DIGEST" --type "String" --overwrite
-            docker tag $REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME:$CODEBUILD_BUILD_NUMBER
-            docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME:$CODEBUILD_BUILD_NUMBER
-            MANIFEST=$(aws ecr batch-get-image --repository-name $REPO_NAME --image-ids imageTag=$CODEBUILD_BUILD_NUMBER --query 'images[].imageManifest' --output text)
-            aws ecr put-image --repository-name $REPO_NAME --image-tag latest --image-manifest "$MANIFEST"
           fi
