@@ -48,7 +48,7 @@ resource "aws_ssm_parameter" "ne4oj_image_digest" {
 }
 
 module "neo4j-image-codebuild" {
-  source              = "git::https://github.cms.gov/qpp/qpp-tf-modules.git//codebuild/project/module?ref=master"
+  source              = "git::https://github.cms.gov/qpp/qpp-tf-modules.git//codebuild/project/module?ref=1.2.0"
   region              = local.region
   environment         = local.environment
   project_name        = local.project_name
