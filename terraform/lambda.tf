@@ -38,7 +38,6 @@ resource "aws_lambda_function" "neo4j-cluster-manager" {
 
 resource "aws_lambda_permission" "allow_cloudwatch" {
   for_each      = var.scheduled_events
-  statement_id  = "AllowExecutionFromCloudWatch"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.neo4j-cluster-manager.function_name
   principal     = "events.amazonaws.com"
