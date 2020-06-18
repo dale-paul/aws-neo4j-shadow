@@ -30,7 +30,7 @@
         "awslogs-stream-prefix": "neo4j"
       }
     },
-    "image": "neo4j:${container_version}",
+    "image": "${image}",
     "name": "neo4j"
   }
 ]
