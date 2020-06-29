@@ -29,7 +29,7 @@ variable "business" {
 }
 
 variable "container_version" {
-  default = "4.0"
+  default = "4.1"
 }
 
 variable "dbms_security_auth_enabled" {
