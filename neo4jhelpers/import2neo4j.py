@@ -266,7 +266,6 @@ def import_to_neo4j(data):
 if __name__ == '__main__':
     import json
     import os
-    os.environ['NEO4J_URI'] = 'bolt://localhost:7687'
     with open('test-scripts/QPPFC-1685.json') as f:
         data = json.load(f)
 

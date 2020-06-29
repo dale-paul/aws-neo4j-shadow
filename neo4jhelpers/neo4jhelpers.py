@@ -35,17 +35,15 @@ class Neo4jHelper():
     #====================================
     def _make_node(self,tx,args):
         tx.run(
-            statement=
-                "MERGE (n:" f"{args['label']}" " {name:$properties.name,account:$properties.account}) ON CREATE set n=$properties",
+            "MERGE (n:" f"{args['label']}" " {name:$properties.name,account:$properties.account}) ON CREATE set n=$properties",
             parameters={'properties':args['properties']}
         )
 
     def _make_rel(self,tx,n1,rel,n2):
         tx.run(
-            statement=
-                "MATCH (n1:" f"{n1['label']}" "{name:$n1.name,account:$n1.account}) "
-                "MATCH (n2:" f"{n2['label']}" "{name:$n2.name,account:$n2.account}) "
-                "MERGE (n1)-[r:" f"{rel['label']}" "]->(n2) ON CREATE set r=$properties",
+            "MATCH (n1:" f"{n1['label']}" "{name:$n1.name,account:$n1.account}) "
+            "MATCH (n2:" f"{n2['label']}" "{name:$n2.name,account:$n2.account}) "
+            "MERGE (n1)-[r:" f"{rel['label']}" "]->(n2) ON CREATE set r=$properties",
             parameters={
                         'n1':n1['properties'],
                         'properties':rel['properties'],
@@ -79,5 +77,5 @@ class Neo4jHelper():
 
     def clear_database(self):
         self._session.run(
-            statement = "MATCH(n) DETACH DELETE n"
+            "MATCH(n) DETACH DELETE n"
         )
