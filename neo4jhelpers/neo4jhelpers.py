@@ -35,15 +35,15 @@ class Neo4jHelper():
     #====================================
     def _make_node(self,tx,args):
         tx.run(
-            "MERGE (n:" f"{args['label']}" " {name:$properties.name,account:$properties.account}) ON CREATE set n=$properties",
+            query = "MERGE (n:" f"{args['label']}" " {name:$properties.name,account:$properties.account}) ON CREATE set n=$properties",
             parameters={'properties':args['properties']}
         )
 
     def _make_rel(self,tx,n1,rel,n2):
         tx.run(
-            "MATCH (n1:" f"{n1['label']}" "{name:$n1.name,account:$n1.account}) "
-            "MATCH (n2:" f"{n2['label']}" "{name:$n2.name,account:$n2.account}) "
-            "MERGE (n1)-[r:" f"{rel['label']}" "]->(n2) ON CREATE set r=$properties",
+            query = "MATCH (n1:" f"{n1['label']}" "{name:$n1.name,account:$n1.account}) "
+                    "MATCH (n2:" f"{n2['label']}" "{name:$n2.name,account:$n2.account}) "
+                    "MERGE (n1)-[r:" f"{rel['label']}" "]->(n2) ON CREATE set r=$properties",
             parameters={
                         'n1':n1['properties'],
                         'properties':rel['properties'],
@@ -52,30 +52,26 @@ class Neo4jHelper():
         )
 
     def write_nodes(self,nodelist):
-        tx = self._session.begin_transaction()
-        try:
-            for n in nodelist:
-                self._make_node(tx,n)
-        except Exception as e:
-            tx.success = False
-        else:
-            tx.success = True
-        finally:
-            tx.close()
+        with self._session.begin_transaction() as tx:
+            try:
+                for n in nodelist:
+                    self._make_node(tx,n)
+            except Exception as e:
+                tx.rollback()
+            else:
+                tx.commit()
 
     def write_relations(self,tuples):
-        tx = self._session.begin_transaction()
-        try:
-            for t in tuples:
-                self._make_rel(tx,t[0],t[1],t[2])
-        except Exception as e:
-            tx.success = False
-        else:
-            tx.success = True
-        finally:
-            tx.close()
+        with self._session.begin_transaction() as tx:
+            try:
+                for t in tuples:
+                    self._make_rel(tx,t[0],t[1],t[2])
+            except Exception as e:
+                tx.rollback()
+            else:
+                tx.commit()
 
     def clear_database(self):
         self._session.run(
-            "MATCH(n) DETACH DELETE n"
+            query = "MATCH(n) DETACH DELETE n"
         )
