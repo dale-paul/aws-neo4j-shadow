@@ -114,9 +114,10 @@ data "template_file" "codebuild_cloudwatch_policy" {
 data "template_file" "codebuild_trigger_policy" {
   template = file("policies/codebuild-trigger.tpl")
   vars = {
-    region     = local.region
-    account_id = data.aws_caller_identity.current.account_id
-    project    = var.project
+    region         = local.region
+    account_id     = data.aws_caller_identity.current.account_id
+    infra-project  = var.project
+    docker-project = var.docker_project
   }
 }
 

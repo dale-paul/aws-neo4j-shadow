@@ -2,6 +2,7 @@ version: 0.2
 env:
   variables:
     REPO_NAME: neo4j
+    CONTAINER_TAG: 4.0
 phases:
   install:
     runtime-versions:
@@ -16,12 +17,12 @@ phases:
   build:
     commands:
       - echo Get the Neo4j image from the Docker registry
-      - LATEST_DIGEST=$(wget -q https://registry.hub.docker.com/v2/repositories/library/neo4j/tags/latest -O - | jq -r '.images[].digest')
+      - LATEST_DIGEST=$(wget -q https://registry.hub.docker.com/v2/repositories/library/neo4j/tags/$CONTAINER_TAG -O - | jq -r '.images[].digest')
       - CURRENT_DIGEST=$(aws ssm get-parameter --name '/neo4j/production/image-digest' | jq -r '.Parameter.Value')
       - |
           if [ "$LATEST_DIGEST" != "$CURRENT_DIGEST" ]; then
-            docker pull $REPO_NAME:latest
-            docker tag $REPO_NAME:latest $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME:latest
-            docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME:latest
+            docker pull $REPO_NAME:$CONTAINER_TAG
+            docker tag $REPO_NAME:$CONTAINER_TAG $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME:$CONTAINER_TAG
+            docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$REPO_NAME:$CONTAINER_TAG
             aws ssm put-parameter --name "/neo4j/production/image-digest" --value "$LATEST_DIGEST" --type "String" --overwrite
           fi
