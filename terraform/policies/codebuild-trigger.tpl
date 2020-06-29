@@ -7,7 +7,8 @@
                 "codebuild:StartBuild"
             ],
             "Resource": [
-                "arn:aws:codebuild:${region}:${account_id}:project/${project}"
+                "arn:aws:codebuild:${region}:${account_id}:project/${docker-project}",
+                "arn:aws:codebuild:${region}:${account_id}:project/${infra-project}"
             ]
         }
     ]

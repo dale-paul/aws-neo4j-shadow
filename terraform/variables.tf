@@ -2,6 +2,10 @@ variable "project" {
   default = "neo4j-infra"
 }
 
+variable "docker_project" {
+  default = "neo4j-docker"
+}
+
 variable "application" {
   default = "neo4j-infra"
 }
@@ -25,7 +29,7 @@ variable "business" {
 }
 
 variable "container_version" {
-  default = "latest"
+  default = "4.1"
 }
 
 variable "dbms_security_auth_enabled" {
