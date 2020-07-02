@@ -29,6 +29,18 @@ Run the following commands from Mac terminal to install pre-commit:
 > pre-commit --install
 ```
 
+Follow these steps to install pre-commit on Windows:
+- Download and install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+- Download and install Windows version: [python](https://www.python.org/downloads/) Note: During installation, make sure to check second box "Add to path"
+
+- Install the pre-commit tool open a terminal and run the following:
+```
+> pip install pre-commit
+> pip install detect-secrets
+> cd <to this git repository root directory>
+> pre-commit install
+```
+
 ### terraform_fmt: Terraform format
 Terraform format is run as a pre-commit hook against this repository.  Terraform files that need formatting will be automatically formatted.  Any files that were updated as a result of the terraform format command must be re-added to the git list of files to be committed.
 
