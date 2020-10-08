@@ -38,14 +38,14 @@ variable "dbms_security_auth_enabled" {
 
 variable "aws_accounts" {
   default = [
-    "aws-hhs-cms-ccsq-qpp-qppg",
-    "aws-hhs-cms-amg-qpp-cm",
-    "aws-hhs-cms-amg-qpp-costscoring",
-    "aws-hhs-cms-amg-qpp-selfn",
-    "aws-hhs-cms-ccsq-qpp-navadevops",
-    "aws-hhs-cms-ccsq-qpp-semanticbits",
-    "aws-hhs-cms-mip",
-    "aws-hhs-cms-amg-qpp-targetreview"
+    "aws-hhs-cms-ccsq-isg-qpp-fc",
+    "aws-hhs-cms-ccsq-isg-qpp-cm",
+    "aws-hhs-cms-ccsq-isg-qpp-claims",
+    "aws-hhs-cms-ccsq-isg-qpp-selfn",
+    "aws-hhs-cms-ccsq-isg-qpp-sf-ct",
+    "aws-hhs-cms-ccsq-isg-qpp-ar-bsr",
+    "aws-hhs-cms-ccsq-isg-qpp-auth-elig-fe",
+    "aws-hhs-cms-ccsq-isg-qpp-tr"
   ]
 }
 
@@ -54,7 +54,7 @@ variable "scheduled_events" {
   type        = map
   default = {
     SHUTDOWN = "cron(30 23 ? * MON-FRI *)",
-    WAKEUP   = "cron(45 11 ? * MON-FRI *)"
+    # WAKEUP   = "cron(45 11 ? * MON-FRI *)"
   }
 }
 
