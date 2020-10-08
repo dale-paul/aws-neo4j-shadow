@@ -1,5 +1,4 @@
 locals {
-  environment         = "production"
   owner_tag           = "nlandais@flexion.us"
   ecr_list            = ["${aws_ecr_repository.neo4j.name}"]
   pagerduty_email_tag = "qpp-foundational-components-general@cms-qpp.pagerduty.com"

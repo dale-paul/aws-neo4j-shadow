@@ -9,6 +9,7 @@ terraform {
 }
 
 locals {
+  environment = "production"
   default_tags = merge(
     var.common_tags,
     map(
@@ -117,7 +118,7 @@ data "template_file" "codebuild_trigger_policy" {
     region         = local.region
     account_id     = data.aws_caller_identity.current.account_id
     infra-project  = var.project
-    docker-project = var.docker_project
+    docker-project = "${var.docker_project}-${local.environment}"
   }
 }
 
@@ -154,7 +155,7 @@ data "aws_route53_zone" "qpp_hosted_zone" {
 }
 
 data "aws_ssm_parameter" "qppg_account" {
-  name = "/accounts/qpp/aws-hhs-cms-ccsq-qpp-qppg"
+  name = "/accounts/qpp/aws-hhs-cms-ccsq-isg-qpp-fc"
 }
 
 data "aws_iam_policy_document" "cost_saving_lambda_iam_policy" {
